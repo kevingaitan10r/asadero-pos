@@ -1,0 +1,8 @@
+{
+  "name": "Remix Asadero POS",
+  "description": "Sistema punto de venta (POS) para asadero de pollos con gestión de menú, órdenes, mesas, checkout interactivo y cierre de caja.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

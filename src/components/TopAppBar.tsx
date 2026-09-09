@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { AuthUser } from '../types';
+import { AuthUser, InventoryItem } from '../types';
 
 interface TopAppBarProps {
   searchQuery: string;
@@ -16,6 +16,8 @@ interface TopAppBarProps {
   onRequestUnlockAdmin?: () => void;
   currentUser?: AuthUser | null;
   onLogout?: () => void;
+  lowStockItems?: InventoryItem[];
+  onNavigateToInventory?: () => void;
 }
 
 export const TopAppBar: React.FC<TopAppBarProps> = ({
@@ -32,17 +34,19 @@ export const TopAppBar: React.FC<TopAppBarProps> = ({
   onLockAdmin,
   onRequestUnlockAdmin,
   currentUser,
-  onLogout
+  onLogout,
+  lowStockItems = [],
+  onNavigateToInventory
 }) => {
   const [time, setTime] = useState<string>('');
   const [date, setDate] = useState<string>('');
   const [showNotifications, setShowNotifications] = useState(false);
   const [showMobileSearch, setShowMobileSearch] = useState(false);
-  const [notifications, setNotifications] = useState<string[]>([
-    '🔥 Horno 1 alcanzó temperatura óptima (220°C)',
-    '🍗 Lote de 12 pollos listo para servir',
-    '🔔 Mesa 3 solicitó la cuenta'
-  ]);
+
+  // Alertas dinámicas reales: Únicamente insumos con stock por debajo del mínimo
+  const inventoryAlerts = lowStockItems.filter(
+    (item) => item.stockQuantity <= item.minStockThreshold
+  );
 
   useEffect(() => {
     const updateTime = () => {
@@ -198,52 +202,94 @@ export const TopAppBar: React.FC<TopAppBarProps> = ({
           </span>
         </div>
 
-        {/* Notifications Button */}
-        <div className="relative">
-          <button
-            id="btn-notifications"
-            onClick={() => setShowNotifications(!showNotifications)}
-            className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-surface-elevated hover:bg-surface-hover transition-all flex items-center justify-center text-slate-700 dark:text-slate-200 relative cursor-pointer border border-border-subtle shadow-sm"
-          >
-            <span className="material-symbols-outlined text-lg sm:text-xl">notifications</span>
-            {notifications.length > 0 && (
-              <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-600 text-white text-[10px] font-black rounded-full flex items-center justify-center shadow-md">
-                {notifications.length}
+        {/* Real Inventory Alerts Button (Only for Admin) */}
+        {currentUser?.role === 'admin' && (
+          <div className="relative">
+            <button
+              id="btn-notifications"
+              onClick={() => setShowNotifications(!showNotifications)}
+              className={`w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-surface-elevated hover:bg-surface-hover transition-all flex items-center justify-center relative cursor-pointer border shadow-sm ${
+                inventoryAlerts.length > 0
+                  ? 'text-amber-600 dark:text-amber-400 border-amber-500/40 bg-amber-500/10'
+                  : 'text-slate-500 dark:text-slate-400 border-border-subtle'
+              }`}
+              title="Alertas de Inventario Bajo"
+            >
+              <span className="material-symbols-outlined text-lg sm:text-xl">
+                {inventoryAlerts.length > 0 ? 'warning' : 'inventory_2'}
               </span>
-            )}
-          </button>
+              {inventoryAlerts.length > 0 && (
+                <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-600 text-white text-[10px] font-black rounded-full flex items-center justify-center shadow-md animate-pulse">
+                  {inventoryAlerts.length}
+                </span>
+              )}
+            </button>
 
-          {/* Notifications Dropdown */}
-          {showNotifications && (
-            <div className="absolute right-0 top-12 w-72 sm:w-80 bg-surface border border-border-medium rounded-2xl shadow-2xl p-4 z-50 animate-in fade-in zoom-in-95 duration-150">
-              <div className="flex items-center justify-between pb-3 border-b border-border-subtle mb-3">
-                <h4 className="font-bold text-sm text-slate-900 dark:text-white">Alertas de Cocina</h4>
-                <button
-                  onClick={() => setNotifications([])}
-                  className="text-xs text-red-600 dark:text-red-400 hover:underline cursor-pointer font-bold"
-                >
-                  Limpiar todas
-                </button>
-              </div>
-              <div className="space-y-2 max-h-64 overflow-y-auto custom-scrollbar">
-                {notifications.length === 0 ? (
-                  <p className="text-xs text-slate-500 dark:text-slate-400 text-center py-4">
-                    No hay notificaciones pendientes.
-                  </p>
-                ) : (
-                  notifications.map((n, i) => (
-                    <div
-                      key={i}
-                      className="p-2.5 bg-surface-elevated rounded-xl text-xs text-slate-800 dark:text-slate-200 border border-border-subtle flex items-start gap-2"
-                    >
-                      <span>{n}</span>
+            {/* Notifications Dropdown */}
+            {showNotifications && (
+              <div className="absolute right-0 top-12 w-80 sm:w-96 bg-surface border border-border-medium rounded-2xl shadow-2xl p-4 z-50 animate-in fade-in zoom-in-95 duration-150">
+                <div className="flex items-center justify-between pb-2.5 border-b border-border-subtle mb-3">
+                  <div className="flex items-center gap-1.5">
+                    <span className="material-symbols-outlined text-red-600 text-base">warning</span>
+                    <h4 className="font-black text-xs text-slate-900 dark:text-white uppercase tracking-wider">
+                      Alertas de Inventario Crítico
+                    </h4>
+                  </div>
+                  <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-red-600/15 text-red-600 dark:text-red-400 border border-red-600/30">
+                    {inventoryAlerts.length} {inventoryAlerts.length === 1 ? 'insumo' : 'insumos'}
+                  </span>
+                </div>
+
+                <div className="space-y-2 max-h-64 overflow-y-auto custom-scrollbar">
+                  {inventoryAlerts.length === 0 ? (
+                    <div className="py-6 text-center text-slate-400 space-y-1">
+                      <span className="material-symbols-outlined text-2xl text-emerald-500">check_circle</span>
+                      <p className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                        Todo el inventario está en niveles óptimos
+                      </p>
+                      <p className="text-[10px] text-slate-400">
+                        No hay insumos por debajo del umbral mínimo.
+                      </p>
                     </div>
-                  ))
+                  ) : (
+                    inventoryAlerts.map((item) => (
+                      <div
+                        key={item.id}
+                        className="p-2.5 bg-surface-elevated rounded-xl text-xs border border-red-500/20 flex flex-col gap-1"
+                      >
+                        <div className="flex justify-between items-start">
+                          <span className="font-extrabold text-slate-900 dark:text-white">
+                            {item.name}
+                          </span>
+                          <span className="px-1.5 py-0.5 rounded bg-red-600 text-white font-mono font-black text-[10px]">
+                            {Number(item.stockQuantity.toFixed(2))} {item.unit}
+                          </span>
+                        </div>
+                        <div className="text-[11px] text-slate-500 dark:text-slate-400 flex justify-between">
+                          <span>Mínimo requerido: {item.minStockThreshold} {item.unit}</span>
+                          <span className="text-red-600 dark:text-red-400 font-bold">⚠️ Reabastecer</span>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+
+                {onNavigateToInventory && (
+                  <button
+                    onClick={() => {
+                      onNavigateToInventory();
+                      setShowNotifications(false);
+                    }}
+                    className="w-full mt-3 py-2 bg-red-600 hover:bg-red-700 text-white rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 transition-all cursor-pointer shadow-sm"
+                  >
+                    <span>Gestionar Inventario & Compras</span>
+                    <span className="material-symbols-outlined text-sm">arrow_forward</span>
+                  </button>
                 )}
               </div>
-            </div>
-          )}
-        </div>
+            )}
+          </div>
+        )}
 
         {/* Active User Profile & Logout Button */}
         {currentUser && (

@@ -748,6 +748,14 @@ export default function App() {
           onLockAdmin={handleLockAdmin}
           currentUser={currentUser}
           onLogout={handleLogout}
+          lowStockItems={inventoryItems}
+          onNavigateToInventory={() => {
+            if (isAdminUnlocked) {
+              setActiveTab('inventory');
+            } else {
+              handleRequestUnlockAdmin('inventory', 'Inventario');
+            }
+          }}
         />
 
         {/* Tab Router */}

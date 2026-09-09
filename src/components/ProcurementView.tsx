@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Supplier, PurchaseOrder, InventoryItem, PurchaseOrderItem, Expense } from '../types';
+import { Supplier, PurchaseOrder, InventoryItem, PurchaseOrderItem } from '../types';
 import { formatCOP } from '../utils/formatters';
 import {
   Truck,
@@ -14,9 +14,7 @@ import {
   Phone,
   Mail,
   UserCheck,
-  Calendar,
-  X,
-  AlertCircle
+  X
 } from 'lucide-react';
 
 interface ProcurementViewProps {
@@ -168,38 +166,38 @@ export function ProcurementView({
   );
 
   return (
-    <div className="flex-1 h-full flex flex-col bg-[#131313] p-4 lg:p-6 overflow-hidden">
+    <div className="flex-1 h-full flex flex-col bg-background p-4 lg:p-6 overflow-hidden select-none">
       {/* Top Header & Bar */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
         <div>
-          <h1 className="text-xl lg:text-2xl font-black text-white flex items-center gap-2">
-            <Truck size={24} className="text-[#f8bd2a]" />
+          <h1 className="text-xl lg:text-2xl font-black text-slate-900 dark:text-white flex items-center gap-2">
+            <Truck size={24} className="text-amber-500" />
             Compras y Proveedores (ERP)
           </h1>
-          <p className="text-xs text-[#a0a0a0] mt-0.5">
-            Gestión de abastecimiento, órdenes de compra y abastecimiento directo a inventario
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+            Gestión de abastecimiento, órdenes de compra y carga directa a inventario
           </p>
         </div>
 
         {/* Action Buttons & SubTabs */}
         <div className="flex items-center gap-3">
-          <div className="bg-[#1e1e1e] p-1 rounded-xl border border-[#2a2a2a] flex items-center">
+          <div className="bg-surface-elevated p-1 rounded-xl border border-border-subtle flex items-center shadow-xs">
             <button
               onClick={() => setActiveSubTab('orders')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer ${
+              className={`px-3 py-1.5 rounded-lg text-xs font-black transition cursor-pointer ${
                 activeSubTab === 'orders'
-                  ? 'bg-[#d32f2f] text-white shadow'
-                  : 'text-gray-400 hover:text-white'
+                  ? 'bg-red-600 text-white shadow-md shadow-red-600/20'
+                  : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
               }`}
             >
               Órdenes de Compra
             </button>
             <button
               onClick={() => setActiveSubTab('suppliers')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer ${
+              className={`px-3 py-1.5 rounded-lg text-xs font-black transition cursor-pointer ${
                 activeSubTab === 'suppliers'
-                  ? 'bg-[#d32f2f] text-white shadow'
-                  : 'text-gray-400 hover:text-white'
+                  ? 'bg-red-600 text-white shadow-md shadow-red-600/20'
+                  : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
               }`}
             >
               Directorio Proveedores
@@ -209,14 +207,14 @@ export function ProcurementView({
           {activeSubTab === 'orders' ? (
             <button
               onClick={() => setIsNewPOModalOpen(true)}
-              className="px-4 py-2 bg-[#10b981] hover:bg-[#059669] text-white text-xs font-bold rounded-xl shadow transition flex items-center gap-2 cursor-pointer"
+              className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl shadow-md transition flex items-center gap-2 cursor-pointer active:scale-95"
             >
-              <Plus size={16} /> Nueva Orden de Compra
+              <Plus size={16} /> Nueva Orden PO
             </button>
           ) : (
             <button
               onClick={() => setIsNewSupplierModalOpen(true)}
-              className="px-4 py-2 bg-[#3b82f6] hover:bg-[#2563eb] text-white text-xs font-bold rounded-xl shadow transition flex items-center gap-2 cursor-pointer"
+              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow-md transition flex items-center gap-2 cursor-pointer active:scale-95"
             >
               <Plus size={16} /> Registrar Proveedor
             </button>
@@ -226,7 +224,7 @@ export function ProcurementView({
 
       {/* Search Input */}
       <div className="mb-4 relative max-w-md">
-        <Search className="absolute left-3.5 top-3 text-gray-500" size={16} />
+        <Search className="absolute left-3.5 top-3 text-slate-400" size={16} />
         <input
           type="text"
           placeholder={
@@ -236,7 +234,7 @@ export function ProcurementView({
           }
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          className="w-full pl-10 pr-4 py-2 bg-[#1e1e1e] text-xs text-white rounded-xl border border-[#2a2a2a] focus:outline-none focus:border-[#f8bd2a]"
+          className="w-full pl-10 pr-4 py-2 bg-surface text-xs text-slate-900 dark:text-white rounded-xl border border-border-subtle focus:outline-none focus:border-amber-500 shadow-xs"
         />
       </div>
 
@@ -250,46 +248,46 @@ export function ProcurementView({
               return (
                 <div
                   key={po.id}
-                  className="bg-[#1e1e1e] border border-[#2a2a2a] rounded-2xl p-5 flex flex-col justify-between shadow-lg relative overflow-hidden"
+                  className="bg-surface border border-border-subtle rounded-2xl p-5 flex flex-col justify-between shadow-sm relative overflow-hidden"
                 >
-                  <div className="flex items-center justify-between border-b border-[#2a2a2a] pb-3 mb-3">
+                  <div className="flex items-center justify-between border-b border-border-subtle pb-3 mb-3">
                     <div>
-                      <span className="text-xs font-mono font-bold text-[#f8bd2a]">
+                      <span className="text-xs font-mono font-bold text-amber-600 dark:text-amber-400">
                         {po.poNumber}
                       </span>
-                      <h3 className="text-sm font-bold text-white mt-0.5">
+                      <h3 className="text-sm font-extrabold text-slate-900 dark:text-white mt-0.5">
                         {po.supplierName}
                       </h3>
                     </div>
                     {isReceived ? (
-                      <span className="px-2.5 py-1 rounded-full text-[10px] font-black bg-[#10b981]/20 text-[#10b981] border border-[#10b981]/30 flex items-center gap-1">
-                        <CheckCircle2 size={12} /> Recibido en Stock
+                      <span className="px-2.5 py-1 rounded-full text-[10px] font-black bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30 flex items-center gap-1">
+                        <CheckCircle2 size={12} /> Recibido
                       </span>
                     ) : (
-                      <span className="px-2.5 py-1 rounded-full text-[10px] font-black bg-amber-500/20 text-amber-400 border border-amber-500/30 flex items-center gap-1">
-                        <Clock size={12} /> Pedido Enviado
+                      <span className="px-2.5 py-1 rounded-full text-[10px] font-black bg-amber-500/15 text-amber-700 dark:text-amber-400 border border-amber-500/30 flex items-center gap-1">
+                        <Clock size={12} /> Enviado
                       </span>
                     )}
                   </div>
 
                   {/* Items Summary */}
                   <div className="space-y-1.5 mb-4">
-                    <span className="text-[11px] text-gray-400 font-semibold uppercase tracking-wider block mb-1">
-                      Detalle de Insumos Solicitados:
+                    <span className="text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider block mb-1">
+                      Insumos Solicitados:
                     </span>
                     {po.items.map((item, idx) => (
                       <div
                         key={idx}
-                        className="flex items-center justify-between text-xs text-gray-300 bg-[#161616] p-2 rounded-lg"
+                        className="flex items-center justify-between text-xs text-slate-700 dark:text-slate-300 bg-surface-elevated p-2 rounded-lg border border-border-subtle"
                       >
-                        <span className="font-medium truncate max-w-[180px]">
+                        <span className="font-semibold truncate max-w-[180px]">
                           {item.inventoryItemName}
                         </span>
                         <div className="text-right">
-                          <span className="font-bold text-white">
+                          <span className="font-black text-slate-900 dark:text-white font-mono">
                             {item.quantity} {item.unit}
                           </span>
-                          <span className="text-gray-500 text-[10px] block font-mono">
+                          <span className="text-slate-500 dark:text-slate-400 text-[10px] block font-mono">
                             {formatCOP(item.unitCost)} / u
                           </span>
                         </div>
@@ -298,16 +296,16 @@ export function ProcurementView({
                   </div>
 
                   {po.notes && (
-                    <p className="text-xs text-gray-400 italic mb-4 bg-[#181818] p-2 rounded border border-[#2a2a2a]">
+                    <p className="text-xs text-slate-600 dark:text-slate-400 italic mb-4 bg-surface-elevated p-2 rounded-xl border border-border-subtle">
                       "{po.notes}"
                     </p>
                   )}
 
                   {/* Footer Stats & Receive Action */}
-                  <div className="pt-3 border-t border-[#2a2a2a] flex items-center justify-between">
+                  <div className="pt-3 border-t border-border-subtle flex items-center justify-between">
                     <div>
-                      <span className="text-[10px] text-gray-400 block">Total Compra</span>
-                      <span className="text-base font-black text-white font-mono">
+                      <span className="text-[10px] text-slate-500 dark:text-slate-400 block font-bold">Total Compra</span>
+                      <span className="text-base font-black text-slate-900 dark:text-white font-mono">
                         {formatCOP(po.totalAmount)}
                       </span>
                     </div>
@@ -315,9 +313,9 @@ export function ProcurementView({
                     {!isReceived && (
                       <button
                         onClick={() => onReceivePurchaseOrder(po.id)}
-                        className="px-3.5 py-2 bg-[#10b981] hover:bg-[#059669] text-white text-xs font-bold rounded-xl transition flex items-center gap-1.5 shadow cursor-pointer active:scale-95"
+                        className="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl transition flex items-center gap-1.5 shadow-md cursor-pointer active:scale-95"
                       >
-                        <PackageCheck size={16} /> Recibir e Ingresar a Stock
+                        <PackageCheck size={16} /> Recibir en Stock
                       </button>
                     )}
                   </div>
@@ -331,44 +329,44 @@ export function ProcurementView({
             {filteredSuppliers.map((sup) => (
               <div
                 key={sup.id}
-                className="bg-[#1e1e1e] border border-[#2a2a2a] rounded-2xl p-5 shadow-lg flex flex-col justify-between"
+                className="bg-surface border border-border-subtle rounded-2xl p-5 shadow-sm flex flex-col justify-between"
               >
                 <div>
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded bg-[#2a2a2a] text-[#f8bd2a]">
-                      Categoría: {sup.category}
+                    <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded bg-surface-elevated text-amber-700 dark:text-amber-400 border border-border-subtle">
+                      {sup.category}
                     </span>
-                    <div className="flex items-center gap-0.5 text-amber-400">
+                    <div className="flex items-center gap-0.5 text-amber-500">
                       {[...Array(sup.rating)].map((_, i) => (
                         <Star key={i} size={13} fill="currentColor" />
                       ))}
                     </div>
                   </div>
 
-                  <h3 className="text-base font-bold text-white">{sup.name}</h3>
-                  <p className="text-xs text-gray-400 font-mono mt-0.5">
-                    NIT / RUT: {sup.nit}
+                  <h3 className="text-base font-black text-slate-900 dark:text-white">{sup.name}</h3>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 font-mono mt-0.5">
+                    NIT: {sup.nit}
                   </p>
 
-                  <div className="mt-4 space-y-2 text-xs text-gray-300">
+                  <div className="mt-4 space-y-2 text-xs text-slate-700 dark:text-slate-300">
                     <div className="flex items-center gap-2">
-                      <UserCheck size={14} className="text-gray-400" />
+                      <UserCheck size={14} className="text-slate-400" />
                       <span>Contacto: {sup.contactName}</span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <Phone size={14} className="text-gray-400" />
+                      <Phone size={14} className="text-slate-400" />
                       <span>Teléfono: {sup.phone}</span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <Mail size={14} className="text-gray-400" />
+                      <Mail size={14} className="text-slate-400" />
                       <span className="truncate">Email: {sup.email}</span>
                     </div>
                   </div>
                 </div>
 
-                <div className="mt-5 pt-3 border-t border-[#2a2a2a] flex items-center justify-between">
-                  <span className="text-xs text-[#10b981] font-semibold flex items-center gap-1">
-                    <CheckCircle2 size={13} /> Proveedor Verificado
+                <div className="mt-5 pt-3 border-t border-border-subtle flex items-center justify-between">
+                  <span className="text-xs text-emerald-600 dark:text-emerald-400 font-bold flex items-center gap-1">
+                    <CheckCircle2 size={13} /> Verificado
                   </span>
                   <button
                     onClick={() => {
@@ -376,7 +374,7 @@ export function ProcurementView({
                       setIsNewPOModalOpen(true);
                       setActiveSubTab('orders');
                     }}
-                    className="text-xs font-bold text-[#f8bd2a] hover:underline cursor-pointer"
+                    className="text-xs font-black text-amber-600 dark:text-amber-400 hover:underline cursor-pointer"
                   >
                     + Crear Pedido PO
                   </button>
@@ -389,16 +387,16 @@ export function ProcurementView({
 
       {/* Modal 1: Create New Purchase Order */}
       {isNewPOModalOpen && (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-[#1e1e1e] border border-[#333] rounded-2xl w-full max-w-2xl overflow-hidden shadow-2xl animate-in zoom-in-95 duration-150">
-            <div className="p-4 bg-[#161616] border-b border-[#2a2a2a] flex items-center justify-between">
-              <h2 className="text-base font-bold text-white flex items-center gap-2">
-                <FileText size={18} className="text-[#f8bd2a]" />
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-surface border border-border-medium rounded-2xl w-full max-w-2xl overflow-hidden shadow-2xl animate-in zoom-in-95 duration-150">
+            <div className="p-4 bg-surface-elevated border-b border-border-subtle flex items-center justify-between">
+              <h2 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                <FileText size={18} className="text-amber-500" />
                 Crear Nueva Orden de Compra (PO)
               </h2>
               <button
                 onClick={() => setIsNewPOModalOpen(false)}
-                className="text-gray-400 hover:text-white cursor-pointer"
+                className="text-slate-400 hover:text-slate-700 dark:hover:text-white cursor-pointer"
               >
                 <X size={20} />
               </button>
@@ -407,13 +405,13 @@ export function ProcurementView({
             <form onSubmit={handleSavePO} className="p-5 space-y-4 max-h-[80vh] overflow-y-auto custom-scrollbar">
               {/* Select Supplier */}
               <div>
-                <label className="block text-xs font-bold text-gray-300 mb-1">
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
                   Seleccionar Proveedor
                 </label>
                 <select
                   value={selectedSupplierId}
                   onChange={(e) => setSelectedSupplierId(e.target.value)}
-                  className="w-full bg-[#262626] text-xs text-white p-2.5 rounded-xl border border-[#3a3a3a] focus:outline-none focus:border-[#f8bd2a]"
+                  className="w-full bg-surface-elevated text-xs text-slate-900 dark:text-white p-2.5 rounded-xl border border-border-subtle focus:outline-none focus:border-amber-500"
                 >
                   {suppliers.map((sup) => (
                     <option key={sup.id} value={sup.id}>
@@ -425,7 +423,7 @@ export function ProcurementView({
 
               {/* Add Insumo to PO */}
               <div>
-                <label className="block text-xs font-bold text-gray-300 mb-1">
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
                   Agregar Insumos del Inventario
                 </label>
                 <select
@@ -435,7 +433,7 @@ export function ProcurementView({
                       e.target.value = '';
                     }
                   }}
-                  className="w-full bg-[#262626] text-xs text-white p-2.5 rounded-xl border border-[#3a3a3a] focus:outline-none focus:border-[#f8bd2a]"
+                  className="w-full bg-surface-elevated text-xs text-slate-900 dark:text-white p-2.5 rounded-xl border border-border-subtle focus:outline-none focus:border-amber-500"
                 >
                   <option value="">+ Selecciona insumo para pedir...</option>
                   {inventoryItems.map((inv) => (
@@ -448,10 +446,10 @@ export function ProcurementView({
 
               {/* PO Items Table */}
               {poItems.length > 0 && (
-                <div className="border border-[#2a2a2a] rounded-xl overflow-hidden bg-[#161616]">
+                <div className="border border-border-subtle rounded-xl overflow-hidden bg-surface-elevated">
                   <table className="w-full text-left text-xs">
                     <thead>
-                      <tr className="bg-[#222] text-gray-400 border-b border-[#333]">
+                      <tr className="bg-surface text-slate-500 dark:text-slate-400 border-b border-border-subtle">
                         <th className="p-2.5">Insumo</th>
                         <th className="p-2.5">Cantidad</th>
                         <th className="p-2.5">Costo Unit.</th>
@@ -459,7 +457,7 @@ export function ProcurementView({
                         <th className="p-2.5 text-right">Quitar</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-[#282828] text-white">
+                    <tbody className="divide-y divide-border-subtle text-slate-900 dark:text-white">
                       {poItems.map((item) => (
                         <tr key={item.inventoryItemId}>
                           <td className="p-2.5 font-semibold">{item.inventoryItemName}</td>
@@ -473,9 +471,9 @@ export function ProcurementView({
                                   parseFloat(e.target.value) || 0
                                 )
                               }
-                              className="w-16 bg-[#2a2a2a] text-white px-2 py-1 rounded border border-[#444] text-xs font-bold"
+                              className="w-16 bg-surface text-slate-900 dark:text-white px-2 py-1 rounded border border-border-subtle text-xs font-bold"
                             />
-                            <span className="ml-1 text-[10px] text-gray-400">{item.unit}</span>
+                            <span className="ml-1 text-[10px] text-slate-500">{item.unit}</span>
                           </td>
                           <td className="p-2.5">
                             <input
@@ -487,17 +485,17 @@ export function ProcurementView({
                                   parseFloat(e.target.value) || 0
                                 )
                               }
-                              className="w-24 bg-[#2a2a2a] text-white px-2 py-1 rounded border border-[#444] text-xs font-bold"
+                              className="w-24 bg-surface text-slate-900 dark:text-white px-2 py-1 rounded border border-border-subtle text-xs font-bold"
                             />
                           </td>
-                          <td className="p-2.5 font-bold text-[#f8bd2a]">
+                          <td className="p-2.5 font-black text-amber-600 dark:text-amber-400 font-mono">
                             {formatCOP(item.quantity * item.unitCost)}
                           </td>
                           <td className="p-2.5 text-right">
                             <button
                               type="button"
                               onClick={() => handleRemovePOItem(item.inventoryItemId)}
-                              className="text-red-400 hover:text-red-300"
+                              className="text-red-500 hover:text-red-400 cursor-pointer"
                             >
                               <X size={16} />
                             </button>
@@ -511,7 +509,7 @@ export function ProcurementView({
 
               {/* Notes */}
               <div>
-                <label className="block text-xs font-bold text-gray-300 mb-1">
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
                   Notas u Observaciones del Pedido
                 </label>
                 <textarea
@@ -519,21 +517,21 @@ export function ProcurementView({
                   value={poNotes}
                   onChange={(e) => setPoNotes(e.target.value)}
                   placeholder="Ej: Entregar antes de las 10:00 AM en cámara fría."
-                  className="w-full bg-[#262626] text-xs text-white p-2.5 rounded-xl border border-[#3a3a3a] focus:outline-none focus:border-[#f8bd2a]"
+                  className="w-full bg-surface-elevated text-xs text-slate-900 dark:text-white p-2.5 rounded-xl border border-border-subtle focus:outline-none focus:border-amber-500"
                 />
               </div>
 
-              <div className="pt-3 border-t border-[#2a2a2a] flex items-center justify-end gap-3">
+              <div className="pt-3 border-t border-border-subtle flex items-center justify-end gap-3">
                 <button
                   type="button"
                   onClick={() => setIsNewPOModalOpen(false)}
-                  className="px-4 py-2 bg-[#2a2a2a] text-gray-300 text-xs font-bold rounded-xl"
+                  className="px-4 py-2 bg-surface-elevated text-slate-700 dark:text-slate-300 text-xs font-bold rounded-xl hover:bg-surface-hover border border-border-subtle cursor-pointer"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 bg-[#10b981] hover:bg-[#059669] text-white text-xs font-bold rounded-xl shadow cursor-pointer"
+                  className="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl shadow-md cursor-pointer active:scale-95"
                 >
                   Generar Orden de Compra
                 </button>
@@ -545,16 +543,16 @@ export function ProcurementView({
 
       {/* Modal 2: Create New Supplier */}
       {isNewSupplierModalOpen && (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-[#1e1e1e] border border-[#333] rounded-2xl w-full max-w-md overflow-hidden shadow-2xl">
-            <div className="p-4 bg-[#161616] border-b border-[#2a2a2a] flex items-center justify-between">
-              <h2 className="text-base font-bold text-white flex items-center gap-2">
-                <Building2 size={18} className="text-[#3b82f6]" />
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-surface border border-border-medium rounded-2xl w-full max-w-md overflow-hidden shadow-2xl">
+            <div className="p-4 bg-surface-elevated border-b border-border-subtle flex items-center justify-between">
+              <h2 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                <Building2 size={18} className="text-blue-500" />
                 Registrar Nuevo Proveedor
               </h2>
               <button
                 onClick={() => setIsNewSupplierModalOpen(false)}
-                className="text-gray-400 hover:text-white cursor-pointer"
+                className="text-slate-400 hover:text-slate-700 dark:hover:text-white cursor-pointer"
               >
                 <X size={20} />
               </button>
@@ -562,7 +560,7 @@ export function ProcurementView({
 
             <form onSubmit={handleSaveSupplier} className="p-5 space-y-3">
               <div>
-                <label className="block text-xs font-bold text-gray-300 mb-1">
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
                   Razón Social / Nombre Comercial *
                 </label>
                 <input
@@ -571,12 +569,12 @@ export function ProcurementView({
                   value={newSupName}
                   onChange={(e) => setNewSupName(e.target.value)}
                   placeholder="Ej: Avícola del Sol S.A.S."
-                  className="w-full bg-[#262626] text-xs text-white p-2.5 rounded-xl border border-[#3a3a3a] focus:outline-none"
+                  className="w-full bg-surface-elevated text-xs text-slate-900 dark:text-white p-2.5 rounded-xl border border-border-subtle focus:outline-none"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-gray-300 mb-1">
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
                   NIT / Identificación Fiscal *
                 </label>
                 <input
@@ -585,12 +583,12 @@ export function ProcurementView({
                   value={newSupNit}
                   onChange={(e) => setNewSupNit(e.target.value)}
                   placeholder="Ej: 900.111.222-3"
-                  className="w-full bg-[#262626] text-xs text-white p-2.5 rounded-xl border border-[#3a3a3a] focus:outline-none"
+                  className="w-full bg-surface-elevated text-xs text-slate-900 dark:text-white p-2.5 rounded-xl border border-border-subtle focus:outline-none"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-gray-300 mb-1">
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
                   Persona de Contacto
                 </label>
                 <input
@@ -598,13 +596,13 @@ export function ProcurementView({
                   value={newSupContact}
                   onChange={(e) => setNewSupContact(e.target.value)}
                   placeholder="Ej: Pedro Martínez"
-                  className="w-full bg-[#262626] text-xs text-white p-2.5 rounded-xl border border-[#3a3a3a] focus:outline-none"
+                  className="w-full bg-surface-elevated text-xs text-slate-900 dark:text-white p-2.5 rounded-xl border border-border-subtle focus:outline-none"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-2">
                 <div>
-                  <label className="block text-xs font-bold text-gray-300 mb-1">
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
                     Teléfono
                   </label>
                   <input
@@ -612,17 +610,17 @@ export function ProcurementView({
                     value={newSupPhone}
                     onChange={(e) => setNewSupPhone(e.target.value)}
                     placeholder="+57 300 000 0000"
-                    className="w-full bg-[#262626] text-xs text-white p-2.5 rounded-xl border border-[#3a3a3a] focus:outline-none"
+                    className="w-full bg-surface-elevated text-xs text-slate-900 dark:text-white p-2.5 rounded-xl border border-border-subtle focus:outline-none"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-gray-300 mb-1">
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
                     Categoría
                   </label>
                   <select
                     value={newSupCategory}
                     onChange={(e) => setNewSupCategory(e.target.value as any)}
-                    className="w-full bg-[#262626] text-xs text-white p-2.5 rounded-xl border border-[#3a3a3a] focus:outline-none"
+                    className="w-full bg-surface-elevated text-xs text-slate-900 dark:text-white p-2.5 rounded-xl border border-border-subtle focus:outline-none"
                   >
                     <option value="carnes">Carnes / Pollos</option>
                     <option value="verduras">Verduras</option>
@@ -633,17 +631,17 @@ export function ProcurementView({
                 </div>
               </div>
 
-              <div className="pt-3 border-t border-[#2a2a2a] flex justify-end gap-2">
+              <div className="pt-3 border-t border-border-subtle flex justify-end gap-2">
                 <button
                   type="button"
                   onClick={() => setIsNewSupplierModalOpen(false)}
-                  className="px-4 py-2 bg-[#2a2a2a] text-gray-300 text-xs font-bold rounded-xl"
+                  className="px-4 py-2 bg-surface-elevated text-slate-700 dark:text-slate-300 text-xs font-bold rounded-xl hover:bg-surface-hover border border-border-subtle cursor-pointer"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 bg-[#3b82f6] hover:bg-[#2563eb] text-white text-xs font-bold rounded-xl shadow cursor-pointer"
+                  className="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow-md cursor-pointer active:scale-95"
                 >
                   Guardar Proveedor
                 </button>

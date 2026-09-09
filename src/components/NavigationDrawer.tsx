@@ -1,5 +1,6 @@
 import React from 'react';
 import { ActiveTab } from '../types';
+import { ShieldCheck, Lock, Unlock } from 'lucide-react';
 
 interface NavigationDrawerProps {
   activeTab: ActiveTab;
@@ -8,7 +9,6 @@ interface NavigationDrawerProps {
   cartCount: number;
   pendingOrdersCount: number;
   lowStockCount?: number;
-  // Hover & Responsiveness Props
   isHovered: boolean;
   onMouseEnter: () => void;
   onMouseLeave: () => void;
@@ -16,6 +16,11 @@ interface NavigationDrawerProps {
   onTogglePin: () => void;
   isOpenMobile: boolean;
   onCloseMobile: () => void;
+  theme?: 'dark' | 'light';
+  onToggleTheme?: () => void;
+  isAdminUnlocked?: boolean;
+  onRequestUnlockAdmin?: (targetTab: ActiveTab, targetTitle: string) => void;
+  onLockAdmin?: () => void;
 }
 
 export const NavigationDrawer: React.FC<NavigationDrawerProps> = ({
@@ -31,15 +36,36 @@ export const NavigationDrawer: React.FC<NavigationDrawerProps> = ({
   isPinned,
   onTogglePin,
   isOpenMobile,
-  onCloseMobile
+  onCloseMobile,
+  isAdminUnlocked = false,
+  onRequestUnlockAdmin,
+  onLockAdmin
 }) => {
   const isExpanded = isPinned || isHovered || isOpenMobile;
 
-  const handleSelectTab = (tab: ActiveTab) => {
+  const handleSelectTab = (tab: ActiveTab, isErpModule = false, moduleTitle = '') => {
+    if (isErpModule && !isAdminUnlocked) {
+      if (onRequestUnlockAdmin) {
+        onRequestUnlockAdmin(tab, moduleTitle);
+      }
+      return;
+    }
+
     onTabChange(tab);
     if (isOpenMobile) {
       onCloseMobile();
     }
+  };
+
+  const navItemClass = (tab: ActiveTab) => {
+    const isActive = activeTab === tab;
+    return `flex items-center ${
+      isExpanded ? 'justify-between px-3.5' : 'justify-center px-0'
+    } py-2.5 rounded-xl font-bold text-xs sm:text-sm cursor-pointer transition-all duration-150 relative ${
+      isActive
+        ? 'bg-slate-900 dark:bg-white text-white dark:text-slate-900 shadow-sm font-black'
+        : 'text-slate-600 dark:text-slate-300 hover:bg-surface-hover hover:text-slate-900 dark:hover:text-white'
+    }`;
   };
 
   return (
@@ -48,7 +74,7 @@ export const NavigationDrawer: React.FC<NavigationDrawerProps> = ({
       {isOpenMobile && (
         <div
           onClick={onCloseMobile}
-          className="fixed inset-0 bg-black/75 backdrop-blur-sm z-40 lg:hidden transition-opacity duration-300"
+          className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 lg:hidden transition-opacity duration-300"
         />
       )}
 
@@ -56,10 +82,10 @@ export const NavigationDrawer: React.FC<NavigationDrawerProps> = ({
       {!isPinned && !isHovered && (
         <div
           onMouseEnter={onMouseEnter}
-          className="fixed left-0 top-0 bottom-0 w-4 z-40 hidden lg:block cursor-pointer group"
-          title="Pasa el cursor para abrir el menú ERP y POS"
+          className="fixed left-0 top-0 bottom-0 w-3 z-40 hidden lg:block cursor-pointer group"
+          title="Pasa el cursor para desplegar el menú"
         >
-          <div className="absolute left-1 top-1/2 -translate-y-1/2 w-1.5 h-16 bg-[#f8bd2a] rounded-full opacity-60 group-hover:opacity-100 group-hover:h-24 edge-trigger-pulse transition-all" />
+          <div className="absolute left-0.5 top-1/2 -translate-y-1/2 w-1 h-14 bg-amber-500 rounded-full opacity-40 group-hover:opacity-100 group-hover:h-20 edge-trigger-pulse transition-all" />
         </div>
       )}
 
@@ -68,32 +94,46 @@ export const NavigationDrawer: React.FC<NavigationDrawerProps> = ({
         id="navigation-drawer"
         onMouseEnter={onMouseEnter}
         onMouseLeave={onMouseLeave}
-        className={`fixed lg:relative top-0 bottom-0 left-0 z-50 lg:z-20 h-full bg-[#1b1c1c] border-r border-[#5b403d]/40 flex flex-col py-4 shrink-0 select-none shadow-[6px_0_30px_rgba(0,0,0,0.6)] drawer-transition ${
+        className={`fixed lg:relative top-0 bottom-0 left-0 z-50 lg:z-20 h-full bg-surface border-r border-border-subtle flex flex-col py-4 shrink-0 select-none shadow-2xl lg:shadow-none drawer-transition ${
           isOpenMobile
-            ? 'translate-x-0 w-[280px] sm:w-[320px]'
+            ? 'translate-x-0 w-[280px] sm:w-[300px]'
             : 'lg:translate-x-0 -translate-x-full'
         } ${
           isExpanded
-            ? 'lg:w-[300px] xl:w-[320px]'
-            : 'lg:w-[72px] lg:px-2'
+            ? 'lg:w-[280px] xl:w-[290px]'
+            : 'lg:w-[68px] lg:px-2'
         }`}
       >
         {/* Top Header & Pin Toggle */}
-        <div className={`px-4 mb-3 flex items-center justify-between ${!isExpanded ? 'lg:px-1 lg:justify-center' : ''}`}>
+        <div className={`px-3.5 mb-3 flex items-center justify-between ${!isExpanded ? 'lg:px-1 lg:justify-center' : ''}`}>
           {isExpanded ? (
-            <div>
-              <div className="flex items-center gap-1.5 text-[11px] font-black uppercase tracking-widest text-[#ffb3ac] opacity-90 mb-0.5">
-                <span className="w-2 h-2 rounded-full bg-[#7ddc7a] animate-pulse"></span>
-                <span>ERP & POS Suite v2.5</span>
+            <div className="flex items-center gap-2.5 min-w-0">
+              <div className="w-9 h-9 rounded-xl overflow-hidden bg-white p-0.5 shadow-sm border border-border-subtle shrink-0 flex items-center justify-center">
+                <img
+                  src="/logo.png"
+                  alt="MAXI Pollos 22"
+                  className="w-full h-full object-contain"
+                />
               </div>
-              <h2 className="text-lg lg:text-xl font-black text-[#f8bd2a] tracking-tight">
-                El Remix Asadero
-              </h2>
+              <div className="min-w-0">
+                <h2 className="text-sm font-black text-slate-900 dark:text-white tracking-tight truncate leading-tight">
+                  MAXI <span className="text-red-600 dark:text-red-500">Pollos</span> <span className="text-amber-500">22</span>
+                </h2>
+                <div className="flex items-center gap-1.5 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                  <span>Asadero & Grill</span>
+                </div>
+              </div>
             </div>
           ) : (
-            <div className="hidden lg:flex flex-col items-center gap-1" title="ERP & POS Suite">
-              <span className="w-2.5 h-2.5 rounded-full bg-[#7ddc7a] animate-pulse"></span>
-              <span className="text-[10px] font-extrabold text-[#f8bd2a]">ERP</span>
+            <div className="hidden lg:flex flex-col items-center gap-1" title="MAXI Pollos 22">
+              <div className="w-8 h-8 rounded-xl overflow-hidden bg-white p-0.5 shadow-xs border border-border-subtle flex items-center justify-center">
+                <img
+                  src="/logo.png"
+                  alt="MAXI Pollos 22"
+                  className="w-full h-full object-contain"
+                />
+              </div>
             </div>
           )}
 
@@ -103,10 +143,10 @@ export const NavigationDrawer: React.FC<NavigationDrawerProps> = ({
               onClick={onTogglePin}
               className={`hidden lg:flex w-8 h-8 rounded-lg items-center justify-center transition-all cursor-pointer ${
                 isPinned
-                  ? 'bg-[#d32f2f] text-white shadow-md'
-                  : 'bg-[#2a2a2a] text-[#e4beba]/70 hover:text-white hover:bg-[#353535]'
+                  ? 'bg-red-600 text-white shadow-sm'
+                  : 'bg-surface-elevated text-slate-500 hover:text-slate-900 dark:hover:text-white hover:bg-surface-hover border border-border-subtle'
               }`}
-              title={isPinned ? 'Desfijar menú (auto-despliegue)' : 'Fijar menú permanentemente'}
+              title={isPinned ? 'Desfijar menú (modo auto-despliegue)' : 'Fijar menú permanentemente'}
             >
               <span className={`material-symbols-outlined text-lg ${isPinned ? 'filled' : ''}`}>
                 keep
@@ -115,7 +155,7 @@ export const NavigationDrawer: React.FC<NavigationDrawerProps> = ({
 
             <button
               onClick={onCloseMobile}
-              className="lg:hidden w-8 h-8 rounded-lg bg-[#2a2a2a] text-[#e4beba] flex items-center justify-center hover:text-white"
+              className="lg:hidden w-8 h-8 rounded-lg bg-surface-elevated text-slate-600 dark:text-slate-300 flex items-center justify-center hover:text-slate-900 dark:hover:text-white cursor-pointer"
             >
               <span className="material-symbols-outlined text-xl">close</span>
             </button>
@@ -123,11 +163,12 @@ export const NavigationDrawer: React.FC<NavigationDrawerProps> = ({
         </div>
 
         {/* Navigation Links Grouped into POS vs ERP */}
-        <nav className="flex-1 flex flex-col gap-1 px-2 overflow-y-auto custom-scrollbar">
+        <nav className="flex-1 flex flex-col gap-1 px-2.5 overflow-y-auto custom-scrollbar">
           {/* SECTION 1: POS SUITE */}
           {isExpanded && (
-            <div className="px-3 pt-2 pb-1 text-[10px] font-black uppercase tracking-widest text-[#f8bd2a]/80">
-              🛒 Operación POS (Caja & Salón)
+            <div className="px-3 pt-2 pb-1 text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center justify-between">
+              <span>Operación de Restaurante</span>
+              <span className="px-1.5 py-0.2 rounded bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-[9px] font-extrabold border border-emerald-500/20">POS</span>
             </div>
           )}
 
@@ -135,47 +176,35 @@ export const NavigationDrawer: React.FC<NavigationDrawerProps> = ({
           <button
             onClick={() => handleSelectTab('menu')}
             title="Menú & Tomador de Pedidos"
-            className={`flex items-center ${
-              isExpanded ? 'justify-between px-3' : 'justify-center px-0'
-            } py-2.5 rounded-xl transition-all font-bold text-sm cursor-pointer ${
-              activeTab === 'menu'
-                ? 'bg-[#d32f2f] text-white border border-[#ffb3ac] shadow-lg'
-                : 'text-[#e4beba] hover:bg-[#353535]/70 active:scale-95'
-            }`}
+            className={navItemClass('menu')}
           >
             <div className="flex items-center gap-2.5">
-              <span className={`material-symbols-outlined text-xl ${activeTab === 'menu' ? 'filled text-white' : 'text-[#ffb3ac]'}`}>
+              <span className={`material-symbols-outlined text-xl ${activeTab === 'menu' ? 'filled text-white' : 'text-slate-400'}`}>
                 restaurant_menu
               </span>
-              {isExpanded && <span>Menú & Tomador</span>}
+              {isExpanded && <span>Menú & Pedidos</span>}
             </div>
             {cartCount > 0 && (
-              <span className="px-2 py-0.5 text-xs font-black bg-[#f8bd2a] text-[#402d00] rounded-full">
+              <span className="px-2 py-0.5 text-xs font-black bg-amber-400 text-amber-950 rounded-full shadow-sm">
                 {cartCount}
               </span>
             )}
           </button>
 
-          {/* Orders / Tables Tab */}
+          {/* Orders / Kitchen Tab */}
           <button
             onClick={() => handleSelectTab('orders')}
-            title="Mesas, Salón & KDS"
-            className={`flex items-center ${
-              isExpanded ? 'justify-between px-3' : 'justify-center px-0'
-            } py-2.5 rounded-xl transition-all font-bold text-sm cursor-pointer relative ${
-              activeTab === 'orders'
-                ? 'bg-[#d32f2f] text-white border border-[#ffb3ac] shadow-lg'
-                : 'text-[#e4beba] hover:bg-[#353535]/70 active:scale-95'
-            }`}
+            title="Comandas & Cocina KDS"
+            className={navItemClass('orders')}
           >
             <div className="flex items-center gap-2.5">
-              <span className={`material-symbols-outlined text-xl ${activeTab === 'orders' ? 'filled text-white' : 'text-[#ffb3ac]'}`}>
-                table_restaurant
+              <span className={`material-symbols-outlined text-xl ${activeTab === 'orders' ? 'filled text-white' : 'text-slate-400'}`}>
+                soup_kitchen
               </span>
-              {isExpanded && <span>Mesas & Cocina KDS</span>}
+              {isExpanded && <span>Cocina & Comandas</span>}
             </div>
             {pendingOrdersCount > 0 && (
-              <span className="px-2 py-0.5 text-xs font-black bg-[#10b981] text-white rounded-full">
+              <span className="px-2 py-0.5 text-xs font-black bg-emerald-500 text-white rounded-full">
                 {pendingOrdersCount}
               </span>
             )}
@@ -184,198 +213,179 @@ export const NavigationDrawer: React.FC<NavigationDrawerProps> = ({
           {/* Checkout Tab */}
           <button
             onClick={() => handleSelectTab('checkout')}
-            title="Pantalla de Cobro / Checkout"
-            className={`flex items-center ${
-              isExpanded ? 'justify-between px-3' : 'justify-center px-0'
-            } py-2.5 rounded-xl transition-all font-bold text-sm cursor-pointer relative ${
-              activeTab === 'checkout'
-                ? 'bg-[#d32f2f] text-white border border-[#ffb3ac] shadow-lg'
-                : 'text-[#e4beba] hover:bg-[#353535]/70 active:scale-95'
-            }`}
+            title="Caja & Facturación POS"
+            className={navItemClass('checkout')}
           >
             <div className="flex items-center gap-2.5">
-              <span className={`material-symbols-outlined text-xl ${activeTab === 'checkout' ? 'filled text-white' : 'text-[#ffb3ac]'}`}>
+              <span className={`material-symbols-outlined text-xl ${activeTab === 'checkout' ? 'filled text-white' : 'text-slate-400'}`}>
                 point_of_sale
               </span>
               {isExpanded && <span>Caja & Cobro POS</span>}
             </div>
           </button>
 
-          {/* SECTION 2: INTEGRAL ERP SUITE */}
-          {isExpanded && (
-            <div className="px-3 pt-4 pb-1 text-[10px] font-black uppercase tracking-widest text-[#3b82f6]/90 border-t border-[#382624]/60 mt-1">
-              🏢 Suite ERP Integral
-            </div>
-          )}
-
-          {/* Inventario & Stock */}
-          <button
-            onClick={() => handleSelectTab('inventory')}
-            title="Inventario & Insumos"
-            className={`flex items-center ${
-              isExpanded ? 'justify-between px-3' : 'justify-center px-0'
-            } py-2.5 rounded-xl transition-all font-bold text-sm cursor-pointer relative ${
-              activeTab === 'inventory'
-                ? 'bg-[#d32f2f] text-white border border-[#ffb3ac] shadow-lg'
-                : 'text-[#e4beba] hover:bg-[#353535]/70 active:scale-95'
-            }`}
-          >
-            <div className="flex items-center gap-2.5">
-              <span className={`material-symbols-outlined text-xl ${activeTab === 'inventory' ? 'filled text-white' : 'text-[#ffb3ac]'}`}>
-                inventory_2
-              </span>
-              {isExpanded && <span>Inventario & Stock</span>}
-            </div>
-            {lowStockCount > 0 && (
-              <span className="px-2 py-0.5 text-xs font-black bg-[#d32f2f] text-white rounded-full">
-                {lowStockCount}
-              </span>
-            )}
-          </button>
-
-          {/* Escandallos & Costeo (Recipes) */}
-          <button
-            onClick={() => handleSelectTab('recipes')}
-            title="Escandallos y Costeo de Recetas"
-            className={`flex items-center ${
-              isExpanded ? 'justify-between px-3' : 'justify-center px-0'
-            } py-2.5 rounded-xl transition-all font-bold text-sm cursor-pointer ${
-              activeTab === 'recipes'
-                ? 'bg-[#d32f2f] text-white border border-[#ffb3ac] shadow-lg'
-                : 'text-[#e4beba] hover:bg-[#353535]/70 active:scale-95'
-            }`}
-          >
-            <div className="flex items-center gap-2.5">
-              <span className={`material-symbols-outlined text-xl ${activeTab === 'recipes' ? 'filled text-white' : 'text-[#ffb3ac]'}`}>
-                menu_book
-              </span>
-              {isExpanded && <span>Costeo & Recetas</span>}
-            </div>
-          </button>
-
-          {/* Compras & Proveedores */}
-          <button
-            onClick={() => handleSelectTab('procurement')}
-            title="Compras y Proveedores"
-            className={`flex items-center ${
-              isExpanded ? 'justify-between px-3' : 'justify-center px-0'
-            } py-2.5 rounded-xl transition-all font-bold text-sm cursor-pointer ${
-              activeTab === 'procurement'
-                ? 'bg-[#d32f2f] text-white border border-[#ffb3ac] shadow-lg'
-                : 'text-[#e4beba] hover:bg-[#353535]/70 active:scale-95'
-            }`}
-          >
-            <div className="flex items-center gap-2.5">
-              <span className={`material-symbols-outlined text-xl ${activeTab === 'procurement' ? 'filled text-white' : 'text-[#ffb3ac]'}`}>
-                local_shipping
-              </span>
-              {isExpanded && <span>Compras & Proveedores</span>}
-            </div>
-          </button>
-
-          {/* Personal & Turnos (RRHH) */}
-          <button
-            onClick={() => handleSelectTab('hr')}
-            title="Personal, Turnos y Nómina"
-            className={`flex items-center ${
-              isExpanded ? 'justify-between px-3' : 'justify-center px-0'
-            } py-2.5 rounded-xl transition-all font-bold text-sm cursor-pointer ${
-              activeTab === 'hr'
-                ? 'bg-[#d32f2f] text-white border border-[#ffb3ac] shadow-lg'
-                : 'text-[#e4beba] hover:bg-[#353535]/70 active:scale-95'
-            }`}
-          >
-            <div className="flex items-center gap-2.5">
-              <span className={`material-symbols-outlined text-xl ${activeTab === 'hr' ? 'filled text-white' : 'text-[#ffb3ac]'}`}>
-                group
-              </span>
-              {isExpanded && <span>Personal & Turnos</span>}
-            </div>
-          </button>
-
-          {/* CRM Clientes & Domicilios */}
+          {/* CRM Clientes & Domicilios (POS Access) */}
           <button
             onClick={() => handleSelectTab('crm')}
-            title="Clientes CRM & Domicilios"
-            className={`flex items-center ${
-              isExpanded ? 'justify-between px-3' : 'justify-center px-0'
-            } py-2.5 rounded-xl transition-all font-bold text-sm cursor-pointer ${
-              activeTab === 'crm'
-                ? 'bg-[#d32f2f] text-white border border-[#ffb3ac] shadow-lg'
-                : 'text-[#e4beba] hover:bg-[#353535]/70 active:scale-95'
-            }`}
+            title="Clientes CRM & Fidelización"
+            className={navItemClass('crm')}
           >
             <div className="flex items-center gap-2.5">
-              <span className={`material-symbols-outlined text-xl ${activeTab === 'crm' ? 'filled text-white' : 'text-[#ffb3ac]'}`}>
+              <span className={`material-symbols-outlined text-xl ${activeTab === 'crm' ? 'filled text-white' : 'text-slate-400'}`}>
                 diversity_3
               </span>
-              {isExpanded && <span>Clientes & Fidelización</span>}
+              {isExpanded && <span>Clientes & Puntos</span>}
             </div>
           </button>
 
-          {/* Gastos & Finanzas */}
-          <button
-            onClick={() => handleSelectTab('finances')}
-            title="Control de Gastos y Rentabilidad"
-            className={`flex items-center ${
-              isExpanded ? 'justify-between px-3' : 'justify-center px-0'
-            } py-2.5 rounded-xl transition-all font-bold text-sm cursor-pointer ${
-              activeTab === 'finances'
-                ? 'bg-[#d32f2f] text-white border border-[#ffb3ac] shadow-lg'
-                : 'text-[#e4beba] hover:bg-[#353535]/70 active:scale-95'
-            }`}
-          >
-            <div className="flex items-center gap-2.5">
-              <span className={`material-symbols-outlined text-xl ${activeTab === 'finances' ? 'filled text-white' : 'text-[#ffb3ac]'}`}>
-                account_balance_wallet
-              </span>
-              {isExpanded && <span>Finanzas & P&L</span>}
-            </div>
-          </button>
+          {/* SECTION 2: INTEGRAL ERP SUITE (SHOWN ONLY WHEN UNLOCKED) */}
+          {isAdminUnlocked ? (
+            <>
+              {isExpanded && (
+                <div className="px-3 pt-3 pb-1 text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 border-t border-border-subtle mt-2 flex items-center justify-between">
+                  <span>Gestión & ERP Suite</span>
+                  <button
+                    onClick={onLockAdmin}
+                    className="px-2 py-0.5 rounded-lg bg-purple-500/15 text-purple-700 dark:text-purple-300 text-[10px] font-black border border-purple-500/30 flex items-center gap-1 hover:bg-purple-500/25 cursor-pointer transition-all"
+                    title="Bloquear acceso ERP"
+                  >
+                    <Unlock size={11} /> Bloquear
+                  </button>
+                </div>
+              )}
 
-          {/* Dashboard KPIs */}
-          <button
-            onClick={() => handleSelectTab('dashboard')}
-            title="Dashboard y Analíticas"
-            className={`flex items-center ${
-              isExpanded ? 'justify-between px-3' : 'justify-center px-0'
-            } py-2.5 rounded-xl transition-all font-bold text-sm cursor-pointer ${
-              activeTab === 'dashboard'
-                ? 'bg-[#d32f2f] text-white border border-[#ffb3ac] shadow-lg'
-                : 'text-[#e4beba] hover:bg-[#353535]/70 active:scale-95'
-            }`}
-          >
-            <div className="flex items-center gap-2.5">
-              <span className={`material-symbols-outlined text-xl ${activeTab === 'dashboard' ? 'filled text-white' : 'text-[#ffb3ac]'}`}>
-                analytics
-              </span>
-              {isExpanded && <span>Dashboard KPIs</span>}
-            </div>
-          </button>
+              {/* Dashboard KPIs */}
+              <button
+                onClick={() => handleSelectTab('dashboard')}
+                title="Dashboard y Analíticas"
+                className={navItemClass('dashboard')}
+              >
+                <div className="flex items-center gap-2.5">
+                  <span className={`material-symbols-outlined text-xl ${activeTab === 'dashboard' ? 'filled text-white' : 'text-slate-400'}`}>
+                    analytics
+                  </span>
+                  {isExpanded && <span>Dashboard KPIs</span>}
+                </div>
+              </button>
 
-          {/* Configuración ERP & Facturación */}
-          <button
-            onClick={() => handleSelectTab('settings')}
-            title="Configuración ERP & Fiscal"
-            className={`flex items-center ${
-              isExpanded ? 'justify-between px-3' : 'justify-center px-0'
-            } py-2.5 rounded-xl transition-all font-bold text-sm cursor-pointer ${
-              activeTab === 'settings'
-                ? 'bg-[#d32f2f] text-white border border-[#ffb3ac] shadow-lg'
-                : 'text-[#e4beba] hover:bg-[#353535]/70 active:scale-95'
-            }`}
-          >
-            <div className="flex items-center gap-2.5">
-              <span className={`material-symbols-outlined text-xl ${activeTab === 'settings' ? 'filled text-white' : 'text-[#ffb3ac]'}`}>
-                settings
-              </span>
-              {isExpanded && <span>Configuración ERP</span>}
+              {/* Inventario & Stock */}
+              <button
+                onClick={() => handleSelectTab('inventory')}
+                title="Inventario & Insumos"
+                className={navItemClass('inventory')}
+              >
+                <div className="flex items-center gap-2.5">
+                  <span className={`material-symbols-outlined text-xl ${activeTab === 'inventory' ? 'filled text-white' : 'text-slate-400'}`}>
+                    inventory_2
+                  </span>
+                  {isExpanded && <span>Inventario & Stock</span>}
+                </div>
+                {lowStockCount > 0 && (
+                  <span className="px-2 py-0.5 text-xs font-black bg-red-600 text-white rounded-full">
+                    {lowStockCount}
+                  </span>
+                )}
+              </button>
+
+              {/* Gastos & Finanzas */}
+              <button
+                onClick={() => handleSelectTab('finances')}
+                title="Finanzas y Rentabilidad"
+                className={navItemClass('finances')}
+              >
+                <div className="flex items-center gap-2.5">
+                  <span className={`material-symbols-outlined text-xl ${activeTab === 'finances' ? 'filled text-white' : 'text-slate-400'}`}>
+                    account_balance_wallet
+                  </span>
+                  {isExpanded && <span>Finanzas & P&L</span>}
+                </div>
+              </button>
+
+              {/* Escandallos & Costeo (Recipes) */}
+              <button
+                onClick={() => handleSelectTab('recipes')}
+                title="Costeo y Escandallos de Recetas"
+                className={navItemClass('recipes')}
+              >
+                <div className="flex items-center gap-2.5">
+                  <span className={`material-symbols-outlined text-xl ${activeTab === 'recipes' ? 'filled text-white' : 'text-slate-400'}`}>
+                    menu_book
+                  </span>
+                  {isExpanded && <span>Costeo & Recetas</span>}
+                </div>
+              </button>
+
+              {/* Compras & Proveedores */}
+              <button
+                onClick={() => handleSelectTab('procurement')}
+                title="Compras y Proveedores"
+                className={navItemClass('procurement')}
+              >
+                <div className="flex items-center gap-2.5">
+                  <span className={`material-symbols-outlined text-xl ${activeTab === 'procurement' ? 'filled text-white' : 'text-slate-400'}`}>
+                    local_shipping
+                  </span>
+                  {isExpanded && <span>Compras & Proveedores</span>}
+                </div>
+              </button>
+
+              {/* Personal & Turnos (RRHH) */}
+              <button
+                onClick={() => handleSelectTab('hr')}
+                title="Personal, Turnos y Nómina"
+                className={navItemClass('hr')}
+              >
+                <div className="flex items-center gap-2.5">
+                  <span className={`material-symbols-outlined text-xl ${activeTab === 'hr' ? 'filled text-white' : 'text-slate-400'}`}>
+                    group
+                  </span>
+                  {isExpanded && <span>Personal & Turnos</span>}
+                </div>
+              </button>
+
+              {/* Configuración ERP & Facturación */}
+              <button
+                onClick={() => handleSelectTab('settings')}
+                title="Configuración ERP & Fiscal"
+                className={navItemClass('settings')}
+              >
+                <div className="flex items-center gap-2.5">
+                  <span className={`material-symbols-outlined text-xl ${activeTab === 'settings' ? 'filled text-white' : 'text-slate-400'}`}>
+                    settings
+                  </span>
+                  {isExpanded && <span>Configuración</span>}
+                </div>
+              </button>
+            </>
+          ) : (
+            /* ERP Locked Quick Access Button */
+            <div className="mt-3 pt-3 border-t border-border-subtle">
+              <button
+                onClick={() => onRequestUnlockAdmin && onRequestUnlockAdmin('dashboard', 'Suite ERP')}
+                className={`w-full flex items-center ${
+                  isExpanded ? 'justify-between px-3 py-2.5' : 'justify-center py-2 px-0'
+                } rounded-xl bg-surface-elevated hover:bg-purple-500/10 border border-border-subtle hover:border-purple-500/30 text-slate-700 dark:text-slate-300 hover:text-purple-600 dark:hover:text-purple-400 transition-all cursor-pointer group shadow-xs`}
+                title="Ingresar PIN de Administrador para ver Suite ERP"
+              >
+                <div className="flex items-center gap-2">
+                  <span className="material-symbols-outlined text-lg text-purple-500 group-hover:scale-110 transition-transform">
+                    shield
+                  </span>
+                  {isExpanded && (
+                    <div className="text-left">
+                      <span className="block text-xs font-bold text-slate-900 dark:text-white leading-tight">Acceso ERP</span>
+                      <span className="block text-[10px] text-slate-500 dark:text-slate-400">Desbloquear con PIN</span>
+                    </div>
+                  )}
+                </div>
+                {isExpanded && <Lock size={13} className="text-amber-500" />}
+              </button>
             </div>
-          </button>
+          )}
         </nav>
 
         {/* Close Day Action Button */}
-        <div className="px-2 mt-2">
+        <div className="px-3 mt-2">
           <button
             id="btn-close-day"
             onClick={() => {
@@ -384,28 +394,30 @@ export const NavigationDrawer: React.FC<NavigationDrawerProps> = ({
             }}
             title="Arqueo & Cierre de Caja"
             className={`w-full flex justify-center items-center gap-2 ${
-              isExpanded ? 'h-11 px-4' : 'h-10 px-0'
-            } bg-[#d32f2f] hover:bg-[#b71c1c] text-white font-bold text-xs rounded-xl shadow-md border border-[#ffb3ac]/30 hover:brightness-110 active:scale-95 transition-all cursor-pointer`}
+              isExpanded ? 'h-10 px-3' : 'h-10 px-0'
+            } bg-red-600 hover:bg-red-700 text-white font-extrabold text-xs rounded-xl shadow-md transition-all cursor-pointer active:scale-95`}
           >
             <span className="material-symbols-outlined text-lg">lock</span>
-            {isExpanded && <span>Arqueo / Cierre de Caja</span>}
+            {isExpanded && <span>Arqueo / Cierre Caja</span>}
           </button>
         </div>
 
-        {/* Shift and Cashier Info */}
-        <div className={`mt-auto pt-2 border-t border-[#5b403d]/30 flex items-center ${
+        {/* Shift and User Info */}
+        <div className={`mt-auto pt-2.5 border-t border-border-subtle flex items-center ${
           isExpanded ? 'px-4 justify-between' : 'px-1 justify-center'
         }`}>
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-full bg-[#353535] flex items-center justify-center border border-[#5b403d]/50 shrink-0">
-              <span className="material-symbols-outlined text-[#ffb3ac] text-lg">
-                account_circle
-              </span>
+          <div className="flex items-center gap-2.5">
+            <div className={`w-8 h-8 rounded-full ${isAdminUnlocked ? 'bg-gradient-to-br from-purple-600 to-indigo-600' : 'bg-red-600'} text-white flex items-center justify-center font-bold text-xs shadow shrink-0`}>
+              {isAdminUnlocked ? <ShieldCheck size={16} /> : 'POS'}
             </div>
             {isExpanded && (
               <div className="overflow-hidden">
-                <p className="font-bold text-xs text-[#e5e2e1] truncate">Kevin G. (Gerente ERP)</p>
-                <p className="text-[10px] text-[#e4beba]/70">Turno Principal Activo</p>
+                <p className="font-bold text-xs text-slate-900 dark:text-slate-100 truncate">
+                  {isAdminUnlocked ? 'Administrador' : 'Terminal Salón'}
+                </p>
+                <p className="text-[10px] text-slate-500 dark:text-slate-400">
+                  {isAdminUnlocked ? 'Acceso Total ERP' : 'Modo Atención al Cliente'}
+                </p>
               </div>
             )}
           </div>

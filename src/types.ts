@@ -1,4 +1,4 @@
-export type CategoryId = 'pollos' | 'combos' | 'acompanamientos' | 'bebidas' | 'postres';
+export type CategoryId = 'pollos' | 'combos' | 'alacarta' | 'sopas' | 'adiciones' | 'bebidas';
 
 export type SubCategoryFilter = 'all' | 'spicy' | 'traditional' | 'combos' | 'individual' | 'familiar';
 
@@ -77,6 +77,10 @@ export interface Order {
   change?: number;
   serverName?: string;
   earnedPoints?: number;
+  deliveryAddress?: string;
+  deliveryPhone?: string;
+  deliveryNotes?: string;
+  deliveryDriver?: string;
 }
 
 export type TableStatus = 'available' | 'occupied' | 'payment_pending' | 'reserved';
@@ -253,4 +257,5 @@ export interface CompanySettings {
   pointsPer1000Cop: number;
   receiptHeaderMsg: string;
   receiptFooterMsg: string;
+  adminPin: string; // 4-digit security PIN for ERP modules
 }

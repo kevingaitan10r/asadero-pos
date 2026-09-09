@@ -18,7 +18,7 @@ export const TablesAndOrdersView: React.FC<TablesAndOrdersViewProps> = ({
   onAdvanceOrderStatus,
   onPayTable
 }) => {
-  const [viewMode, setViewMode] = useState<'tables' | 'kds'>('tables');
+  const [viewMode, setViewMode] = useState<'tables' | 'kds'>('kds');
   const [areaFilter, setAreaFilter] = useState<'All' | 'Principal' | 'Terraza' | 'Barra'>('All');
   const [statusFilter, setStatusFilter] = useState<'All' | TableStatus>('All');
   const [seatingModalTable, setSeatingModalTable] = useState<Table | null>(null);
@@ -48,46 +48,51 @@ export const TablesAndOrdersView: React.FC<TablesAndOrdersViewProps> = ({
   return (
     <div
       id="tables-orders-workspace"
-      className="flex-1 flex flex-col h-full overflow-hidden p-4 lg:p-6 gap-5 bg-[#131313] select-none"
+      className="flex-1 flex flex-col h-full overflow-hidden p-4 lg:p-6 gap-5 bg-background select-none"
     >
       {/* Top View Mode Switcher (Plano de Mesas vs Cocina KDS) */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shrink-0">
-        <div className="flex items-center gap-2 bg-[#202020] p-1 rounded-xl border border-[#5b403d]/40">
+        <div className="flex items-center gap-1.5 bg-surface-elevated p-1 rounded-xl border border-border-subtle shadow-xs">
           <button
             onClick={() => setViewMode('tables')}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-black transition-all cursor-pointer ${
               viewMode === 'tables'
-                ? 'bg-[#d32f2f] text-white shadow'
-                : 'text-[#e4beba]/70 hover:text-white'
+                ? 'bg-red-600 text-white shadow-md shadow-red-600/20'
+                : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
             }`}
           >
             <span className="material-symbols-outlined text-base">table_restaurant</span>
-            <span>Plano de Mesas</span>
+            <span>Plano de Mesas ({tables.length})</span>
           </button>
           <button
             onClick={() => setViewMode('kds')}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-black transition-all cursor-pointer ${
               viewMode === 'kds'
-                ? 'bg-[#d32f2f] text-white shadow'
-                : 'text-[#e4beba]/70 hover:text-white'
+                ? 'bg-red-600 text-white shadow-md shadow-red-600/20'
+                : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
             }`}
           >
             <span className="material-symbols-outlined text-base">soup_kitchen</span>
             <span>Comandas / Cocina (KDS)</span>
+            {orders.filter(o => o.status === 'pending' || o.status === 'preparing').length > 0 && (
+              <span className="px-1.5 py-0.2 text-[10px] bg-amber-400 text-amber-950 font-black rounded-full">
+                {orders.filter(o => o.status === 'pending' || o.status === 'preparing').length}
+              </span>
+            )}
           </button>
         </div>
 
         {/* Areas / Status Quick Filters */}
         {viewMode === 'tables' && (
-          <div className="flex items-center gap-2 flex-wrap">
+          <div className="flex items-center gap-1.5 flex-wrap">
             {(['All', 'Principal', 'Terraza', 'Barra'] as const).map((area) => (
               <button
                 key={area}
                 onClick={() => setAreaFilter(area)}
-                className={`px-3 py-1 rounded-lg text-xs font-bold border transition-all cursor-pointer ${
+                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                   areaFilter === area
-                    ? 'bg-[#f8bd2a] text-[#402d00] border-[#f8bd2a]'
-                    : 'bg-[#202020] text-[#e4beba] border-[#5b403d]/30 hover:bg-[#2a2a2a]'
+                    ? 'bg-amber-400 text-amber-950 font-black shadow-sm'
+                    : 'bg-surface text-slate-600 dark:text-slate-300 border border-border-subtle hover:bg-surface-hover'
                 }`}
               >
                 {area === 'All' ? 'Todas las Áreas' : area}
@@ -101,40 +106,52 @@ export const TablesAndOrdersView: React.FC<TablesAndOrdersViewProps> = ({
       {viewMode === 'tables' && (
         <div className="flex-1 flex flex-col gap-4 overflow-y-auto custom-scrollbar">
           {/* Context Legend Bar */}
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-[#202020] rounded-2xl p-4 border border-[#5b403d]/40 shadow-sm gap-3 shrink-0">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-surface rounded-2xl p-4 border border-border-subtle shadow-sm gap-3 shrink-0">
             <div>
-              <h2 className="text-xl font-extrabold text-white">
+              <h2 className="text-lg sm:text-xl font-black text-slate-900 dark:text-white">
                 Salón Principal & Terrazas
               </h2>
-              <p className="text-xs text-[#e4beba]/70 mt-0.5">
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
                 Selecciona una mesa para tomar comandas, consultar cuenta o liberar espacio.
               </p>
             </div>
-            <div className="flex items-center gap-4 flex-wrap">
+            <div className="flex items-center gap-3 sm:gap-4 flex-wrap">
               <div
                 onClick={() => setStatusFilter(statusFilter === 'available' ? 'All' : 'available')}
-                className="flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity"
+                className={`flex items-center gap-2 px-3 py-1.5 rounded-xl cursor-pointer transition-all border ${
+                  statusFilter === 'available'
+                    ? 'bg-emerald-500/15 border-emerald-500/40 text-emerald-700 dark:text-emerald-300'
+                    : 'border-transparent hover:bg-surface-elevated text-slate-600 dark:text-slate-300'
+                }`}
               >
-                <span className="w-3.5 h-3.5 rounded-full bg-[#7ddc7a] border border-[#00390a]"></span>
-                <span className="text-xs font-bold text-[#e4beba]">
+                <span className="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
+                <span className="text-xs font-bold">
                   Libres ({availableCount})
                 </span>
               </div>
               <div
                 onClick={() => setStatusFilter(statusFilter === 'occupied' ? 'All' : 'occupied')}
-                className="flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity"
+                className={`flex items-center gap-2 px-3 py-1.5 rounded-xl cursor-pointer transition-all border ${
+                  statusFilter === 'occupied'
+                    ? 'bg-red-500/15 border-red-500/40 text-red-700 dark:text-red-300'
+                    : 'border-transparent hover:bg-surface-elevated text-slate-600 dark:text-slate-300'
+                }`}
               >
-                <span className="w-3.5 h-3.5 rounded-full bg-[#d32f2f] border border-[#ffdad6]"></span>
-                <span className="text-xs font-bold text-[#e4beba]">
+                <span className="w-2.5 h-2.5 rounded-full bg-red-600"></span>
+                <span className="text-xs font-bold">
                   Ocupadas ({occupiedCount})
                 </span>
               </div>
               <div
                 onClick={() => setStatusFilter(statusFilter === 'payment_pending' ? 'All' : 'payment_pending')}
-                className="flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity"
+                className={`flex items-center gap-2 px-3 py-1.5 rounded-xl cursor-pointer transition-all border ${
+                  statusFilter === 'payment_pending'
+                    ? 'bg-amber-500/15 border-amber-500/40 text-amber-700 dark:text-amber-300'
+                    : 'border-transparent hover:bg-surface-elevated text-slate-600 dark:text-slate-300'
+                }`}
               >
-                <span className="w-3.5 h-3.5 rounded-full bg-[#f8bd2a] border border-[#533c00]"></span>
-                <span className="text-xs font-bold text-[#e4beba]">
+                <span className="w-2.5 h-2.5 rounded-full bg-amber-500"></span>
+                <span className="text-xs font-bold">
                   Por Cobrar ({paymentPendingCount})
                 </span>
               </div>
@@ -142,7 +159,7 @@ export const TablesAndOrdersView: React.FC<TablesAndOrdersViewProps> = ({
           </div>
 
           {/* Tables Floor Plan Grid */}
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 pb-6">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 pb-8">
             {filteredTables.map((table) => {
               const isAvailable = table.status === 'available';
               const isOccupied = table.status === 'occupied';
@@ -152,67 +169,67 @@ export const TablesAndOrdersView: React.FC<TablesAndOrdersViewProps> = ({
                 <div
                   key={table.id}
                   id={`table-card-${table.id}`}
-                  className={`bg-[#202020] rounded-2xl p-4.5 flex flex-col justify-between h-[200px] border-2 transition-all relative overflow-hidden group ${
+                  className={`bg-surface rounded-2xl p-4 flex flex-col justify-between min-h-[190px] border transition-all relative overflow-hidden group shadow-xs hover:shadow-md ${
                     isAvailable
-                      ? 'border-[#7ddc7a]/30 hover:border-[#7ddc7a] shadow-sm'
+                      ? 'border-emerald-500/30 hover:border-emerald-500'
                       : isOccupied
-                      ? 'border-[#d32f2f] shadow-[0_0_16px_rgba(211,47,47,0.2)] bg-gradient-to-b from-[#202020] to-[#2a1b1b]'
-                      : 'border-[#f8bd2a] shadow-[0_0_16px_rgba(248,189,42,0.2)]'
+                      ? 'border-red-500/40 hover:border-red-500'
+                      : 'border-amber-500/50 hover:border-amber-500'
                   }`}
                 >
                   {/* Table Header */}
                   <div className="flex justify-between items-start">
                     <div>
-                      <span className="text-xl font-black text-white tracking-tight">
+                      <span className="text-lg sm:text-xl font-black text-slate-900 dark:text-white tracking-tight">
                         {table.name}
                       </span>
-                      <span className="text-[10px] text-[#e4beba]/60 block uppercase font-bold">
+                      <span className="text-[10px] text-slate-500 dark:text-slate-400 block uppercase font-bold">
                         {table.area} • Cap {table.capacity}p
                       </span>
                     </div>
 
                     {/* Status Pill */}
                     {isAvailable && (
-                      <span className="bg-[#7ddc7a] text-[#00390a] font-black text-[11px] px-2.5 py-0.5 rounded-full">
+                      <span className="bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 font-black text-[10px] px-2.5 py-0.5 rounded-full border border-emerald-500/30">
                         Libre
                       </span>
                     )}
                     {isOccupied && (
-                      <span className="bg-[#d32f2f] text-white font-extrabold text-[11px] px-2.5 py-0.5 rounded-full flex items-center gap-1">
-                        <span className="w-1.5 h-1.5 rounded-full bg-white animate-ping"></span>
+                      <span className="bg-red-600 text-white font-extrabold text-[10px] px-2.5 py-0.5 rounded-full flex items-center gap-1">
+                        <span className="w-1.5 h-1.5 rounded-full bg-white"></span>
                         Ocupada
                       </span>
                     )}
                     {isPayment && (
-                      <span className="bg-[#f8bd2a] text-[#402d00] font-black text-[11px] px-2.5 py-0.5 rounded-full animate-bounce">
+                      <span className="bg-amber-400 text-amber-950 font-black text-[10px] px-2.5 py-0.5 rounded-full">
                         Cuenta
                       </span>
                     )}
                   </div>
 
-                  {/* Middle Table Details or Chair visual */}
+                  {/* Middle Table Details */}
                   {isAvailable ? (
-                    <div className="my-auto flex justify-center items-center opacity-40 group-hover:opacity-100 transition-opacity">
-                      <span className="material-symbols-outlined text-5xl text-[#7ddc7a]">
+                    <div className="my-auto flex justify-center items-center opacity-30 group-hover:opacity-80 transition-opacity">
+                      <span className="material-symbols-outlined text-5xl text-emerald-500">
                         chair
                       </span>
                     </div>
                   ) : (
-                    <div className="my-auto space-y-1">
-                      <div className="flex items-center gap-1.5 text-xs text-[#e4beba]">
-                        <span className="material-symbols-outlined text-sm text-[#ffb3ac]">
+                    <div className="my-auto space-y-1.5 bg-surface-elevated/70 p-2.5 rounded-xl border border-border-subtle">
+                      <div className="flex items-center gap-1.5 text-xs text-slate-700 dark:text-slate-200 font-bold">
+                        <span className="material-symbols-outlined text-sm text-red-500">
                           group
                         </span>
-                        <span>{table.guestCount || 4} Personas</span>
+                        <span>{table.guestCount || 4} Comensales</span>
                       </div>
-                      <div className="flex items-center gap-1.5 text-xs text-[#e4beba]">
-                        <span className="material-symbols-outlined text-sm text-[#f8bd2a]">
+                      <div className="flex items-center gap-1.5 text-xs text-slate-700 dark:text-slate-200">
+                        <span className="material-symbols-outlined text-sm text-amber-500">
                           schedule
                         </span>
-                        <span>{table.elapsedMinutes || 30} min</span>
+                        <span>{table.elapsedMinutes || 25} min en mesa</span>
                       </div>
                       {table.serverName && (
-                        <div className="text-[11px] text-[#e4beba]/70">
+                        <div className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">
                           Mesero: {table.serverName}
                         </div>
                       )}
@@ -220,30 +237,30 @@ export const TablesAndOrdersView: React.FC<TablesAndOrdersViewProps> = ({
                   )}
 
                   {/* Bottom Actions */}
-                  <div className="flex gap-2 pt-2 border-t border-[#5b403d]/30">
+                  <div className="flex gap-2 pt-2 border-t border-border-subtle">
                     {isAvailable ? (
                       <button
                         onClick={() => {
                           setSeatingModalTable(table);
                           setGuestCountInput(table.capacity);
                         }}
-                        className="flex-1 py-2 bg-[#2a2a2a] hover:bg-[#7ddc7a] hover:text-[#00390a] text-white font-bold text-xs rounded-xl border border-[#5b403d]/40 transition-all cursor-pointer flex items-center justify-center gap-1"
+                        className="flex-1 py-2 bg-surface-elevated hover:bg-emerald-600 hover:text-white text-slate-700 dark:text-slate-200 font-bold text-xs rounded-xl border border-border-subtle transition-all cursor-pointer flex items-center justify-center gap-1 active:scale-95"
                       >
                         <span className="material-symbols-outlined text-sm">person_add</span>
-                        <span>Ocupar</span>
+                        <span>Ocupar Mesa</span>
                       </button>
                     ) : isOccupied ? (
                       <>
                         <button
                           onClick={() => onSelectTable(table)}
-                          className="flex-1 py-2 bg-[#d32f2f] hover:bg-[#b71c1c] text-white font-bold text-xs rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1"
+                          className="flex-1 py-2 bg-red-600 hover:bg-red-700 text-white font-bold text-xs rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1 active:scale-95 shadow-sm"
                         >
                           <span className="material-symbols-outlined text-sm">restaurant_menu</span>
                           <span>Comanda</span>
                         </button>
                         <button
                           onClick={() => onPayTable(table)}
-                          className="px-3 py-2 bg-[#2a2a2a] hover:bg-[#f8bd2a] hover:text-[#402d00] text-white font-bold text-xs rounded-xl border border-[#5b403d]/40 transition-all cursor-pointer"
+                          className="px-3 py-2 bg-surface-elevated hover:bg-amber-400 hover:text-amber-950 text-slate-700 dark:text-slate-200 font-bold text-xs rounded-xl border border-border-subtle transition-all cursor-pointer"
                           title="Cobrar Mesa"
                         >
                           <span className="material-symbols-outlined text-sm">receipt</span>
@@ -252,7 +269,7 @@ export const TablesAndOrdersView: React.FC<TablesAndOrdersViewProps> = ({
                     ) : (
                       <button
                         onClick={() => onPayTable(table)}
-                        className="flex-1 py-2 bg-[#f8bd2a] hover:bg-[#ffdfa0] text-[#402d00] font-black text-xs rounded-xl shadow-md transition-all cursor-pointer flex items-center justify-center gap-1"
+                        className="flex-1 py-2 bg-amber-400 hover:bg-amber-300 text-amber-950 font-black text-xs rounded-xl shadow-md transition-all cursor-pointer flex items-center justify-center gap-1 active:scale-95"
                       >
                         <span className="material-symbols-outlined text-sm">payments</span>
                         <span>Cobrar Ahora</span>
@@ -269,46 +286,45 @@ export const TablesAndOrdersView: React.FC<TablesAndOrdersViewProps> = ({
       {/* VIEW 2: KDS (Kitchen Display System) */}
       {viewMode === 'kds' && (
         <div className="flex-1 overflow-y-auto custom-scrollbar">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 pb-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 pb-8">
             {orders.map((order) => {
               const isUrgent = order.status === 'pending';
               const isCooking = order.status === 'preparing';
-              const isReady = order.status === 'ready';
 
               return (
                 <div
                   key={order.id}
-                  className={`bg-[#202020] rounded-2xl border-2 overflow-hidden flex flex-col shadow-xl ${
+                  className={`bg-surface rounded-2xl border-2 overflow-hidden flex flex-col shadow-lg transition-all ${
                     isUrgent
-                      ? 'border-[#d32f2f]'
+                      ? 'border-red-500 shadow-red-500/10'
                       : isCooking
-                      ? 'border-[#f8bd2a]'
-                      : 'border-[#7ddc7a]'
+                      ? 'border-amber-500 shadow-amber-500/10'
+                      : 'border-emerald-500 shadow-emerald-500/10'
                   }`}
                 >
                   {/* Ticket Header */}
                   <div
                     className={`p-4 flex justify-between items-center text-white ${
                       isUrgent
-                        ? 'bg-[#d32f2f]'
+                        ? 'bg-red-600'
                         : isCooking
-                        ? 'bg-[#d9a200] text-[#402d00]'
-                        : 'bg-[#20812c]'
+                        ? 'bg-amber-500 text-amber-950'
+                        : 'bg-emerald-600'
                     }`}
                   >
                     <div>
-                      <h3 className="font-extrabold text-base">
+                      <h3 className="font-black text-base">
                         Orden #{order.orderNumber}
                       </h3>
-                      <span className="text-xs opacity-90">
+                      <span className="text-xs opacity-90 font-medium">
                         {order.tableName || 'Mesa'} • {order.customerName || 'Cliente'}
                       </span>
                     </div>
-                    <span className="px-2.5 py-1 rounded-full text-xs font-black bg-black/30 backdrop-blur-sm">
+                    <span className="px-2.5 py-1 rounded-full text-xs font-black bg-black/25 backdrop-blur-xs">
                       {order.status === 'pending'
-                        ? '🚨 Urgente'
+                        ? '🚨 Por Preparar'
                         : order.status === 'preparing'
-                        ? '🔥 En Horno'
+                        ? '🔥 En Asador'
                         : order.status === 'ready'
                         ? '✅ Listo'
                         : 'Completado'}
@@ -316,26 +332,26 @@ export const TablesAndOrdersView: React.FC<TablesAndOrdersViewProps> = ({
                   </div>
 
                   {/* Items List */}
-                  <div className="p-4 flex-1 space-y-3">
+                  <div className="p-4 flex-1 space-y-3 bg-surface">
                     {order.items.map((it, idx) => (
                       <div
                         key={idx}
-                        className="flex justify-between items-start border-b border-[#5b403d]/30 pb-2.5 last:border-0"
+                        className="flex justify-between items-start border-b border-border-subtle pb-2.5 last:border-0"
                       >
                         <div>
-                          <p className="text-sm font-bold text-white">
-                            <span className="text-[#f8bd2a] mr-2 font-black">
+                          <p className="text-sm font-extrabold text-slate-900 dark:text-white">
+                            <span className="text-amber-600 dark:text-amber-400 mr-2 font-black">
                               {it.quantity}x
                             </span>
                             {it.name}
                           </p>
                           {it.selectedModifiers.length > 0 && (
-                            <p className="text-xs text-[#e4beba]/70 ml-6">
+                            <p className="text-xs text-slate-500 dark:text-slate-400 ml-6">
                               {it.selectedModifiers.map((m) => m.name).join(', ')}
                             </p>
                           )}
                           {it.notes && (
-                            <p className="text-xs text-[#ffb3ac] ml-6 font-semibold">
+                            <p className="text-xs text-red-600 dark:text-red-400 ml-6 font-semibold">
                               Nota: {it.notes}
                             </p>
                           )}
@@ -345,20 +361,20 @@ export const TablesAndOrdersView: React.FC<TablesAndOrdersViewProps> = ({
                   </div>
 
                   {/* KDS Footer Action */}
-                  <div className="p-3 bg-[#1b1c1c] border-t border-[#5b403d]/40 flex gap-2">
+                  <div className="p-3 bg-surface-elevated border-t border-border-subtle flex gap-2">
                     <button
                       onClick={() => onAdvanceOrderStatus(order.id)}
-                      className="flex-1 py-2.5 bg-[#d32f2f] hover:bg-[#b71c1c] text-white font-extrabold text-xs rounded-xl shadow transition-all cursor-pointer flex items-center justify-center gap-1.5"
+                      className="flex-1 py-2.5 bg-red-600 hover:bg-red-700 text-white font-black text-xs rounded-xl shadow-md transition-all cursor-pointer flex items-center justify-center gap-1.5 active:scale-98"
                     >
                       <span className="material-symbols-outlined text-base">
                         check_circle
                       </span>
                       <span>
                         {order.status === 'pending'
-                          ? 'Mandar a Horno'
+                          ? 'Mandar a Asador'
                           : order.status === 'preparing'
-                          ? 'Marcar Listo'
-                          : 'Marcar Servido / Despachado'}
+                          ? 'Marcar como Listo'
+                          : 'Marcar como Servido / Despachado'}
                       </span>
                     </button>
                   </div>
@@ -371,30 +387,30 @@ export const TablesAndOrdersView: React.FC<TablesAndOrdersViewProps> = ({
 
       {/* Seating Table Modal */}
       {seatingModalTable && (
-        <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4">
-          <div className="bg-[#202020] border border-[#5b403d] rounded-2xl p-6 max-w-sm w-full space-y-4 shadow-2xl">
-            <h3 className="text-lg font-extrabold text-white">
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-surface border border-border-medium rounded-2xl p-6 max-w-sm w-full space-y-4 shadow-2xl animate-in zoom-in-95 duration-150">
+            <h3 className="text-lg font-black text-slate-900 dark:text-white">
               Ocupar Mesa {seatingModalTable.name}
             </h3>
-            <p className="text-xs text-[#e4beba]/70">
-              Ingresa la cantidad de comensales para abrir la comanda.
+            <p className="text-xs text-slate-500 dark:text-slate-400">
+              Ingresa la cantidad de comensales para abrir la comanda en el salón.
             </p>
 
-            <div className="flex items-center justify-between bg-[#1b1c1c] p-3 rounded-xl border border-[#5b403d]/40">
-              <span className="text-xs font-bold text-white">Comensales:</span>
+            <div className="flex items-center justify-between bg-surface-elevated p-3 rounded-xl border border-border-subtle">
+              <span className="text-xs font-bold text-slate-700 dark:text-slate-200">Comensales:</span>
               <div className="flex items-center gap-3">
                 <button
                   onClick={() => setGuestCountInput(Math.max(1, guestCountInput - 1))}
-                  className="w-8 h-8 rounded-lg bg-[#2a2a2a] text-white font-bold"
+                  className="w-8 h-8 rounded-lg bg-surface text-slate-800 dark:text-white font-bold border border-border-subtle cursor-pointer hover:bg-surface-hover"
                 >
                   -
                 </button>
-                <span className="text-base font-extrabold text-[#f8bd2a]">
+                <span className="text-base font-black text-amber-600 dark:text-amber-400 font-mono">
                   {guestCountInput}
                 </span>
                 <button
                   onClick={() => setGuestCountInput(guestCountInput + 1)}
-                  className="w-8 h-8 rounded-lg bg-[#2a2a2a] text-white font-bold"
+                  className="w-8 h-8 rounded-lg bg-surface text-slate-800 dark:text-white font-bold border border-border-subtle cursor-pointer hover:bg-surface-hover"
                 >
                   +
                 </button>
@@ -404,13 +420,13 @@ export const TablesAndOrdersView: React.FC<TablesAndOrdersViewProps> = ({
             <div className="flex gap-2 pt-2">
               <button
                 onClick={() => setSeatingModalTable(null)}
-                className="flex-1 py-2.5 border border-[#5b403d] text-[#e4beba] rounded-xl text-xs font-bold"
+                className="flex-1 py-2.5 border border-border-subtle text-slate-600 dark:text-slate-300 rounded-xl text-xs font-bold hover:bg-surface-hover cursor-pointer"
               >
                 Cancelar
               </button>
               <button
                 onClick={handleSeatConfirm}
-                className="flex-1 py-2.5 bg-[#d32f2f] text-white rounded-xl text-xs font-bold"
+                className="flex-1 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-xl text-xs font-black shadow-md cursor-pointer active:scale-95"
               >
                 Abrir Comanda
               </button>

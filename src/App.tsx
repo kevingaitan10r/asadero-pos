@@ -48,8 +48,57 @@ import { SettingsView } from './components/SettingsView';
 import { ItemCustomizerModal } from './components/ItemCustomizerModal';
 import { CloseDayModal } from './components/CloseDayModal';
 import { ReceiptModal } from './components/ReceiptModal';
+import { AdminPinModal } from './components/AdminPinModal';
+import { DeliveryInfoModal } from './components/DeliveryInfoModal';
 
 export default function App() {
+  // Theme State (Dark / Light Mode)
+  const [theme, setTheme] = useState<'dark' | 'light'>(() => {
+    if (typeof window !== 'undefined') {
+      return (localStorage.getItem('asadero_pos_theme') as 'dark' | 'light') || 'light';
+    }
+    return 'light';
+  });
+
+  React.useEffect(() => {
+    if (theme === 'dark') {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+    localStorage.setItem('asadero_pos_theme', theme);
+  }, [theme]);
+
+  const handleToggleTheme = () => {
+    setTheme((prev) => (prev === 'dark' ? 'light' : 'dark'));
+  };
+
+  // Admin PIN & ERP Access State
+  const [isAdminUnlocked, setIsAdminUnlocked] = useState<boolean>(false);
+  const [isPinModalOpen, setIsPinModalOpen] = useState<boolean>(false);
+  const [targetErpTab, setTargetErpTab] = useState<{ tab: ActiveTab; title: string } | null>(null);
+
+  const handleRequestUnlockAdmin = (targetTab: ActiveTab = 'dashboard', targetTitle = 'Suite ERP') => {
+    setTargetErpTab({ tab: targetTab, title: targetTitle });
+    setIsPinModalOpen(true);
+  };
+
+  const handlePinSuccess = () => {
+    setIsAdminUnlocked(true);
+    if (targetErpTab) {
+      setActiveTab(targetErpTab.tab);
+    }
+  };
+
+  const handleLockAdmin = () => {
+    setIsAdminUnlocked(false);
+    setTargetErpTab(null);
+    const erpTabs: ActiveTab[] = ['dashboard', 'inventory', 'finances', 'recipes', 'procurement', 'hr', 'settings'];
+    if (erpTabs.includes(activeTab)) {
+      setActiveTab('menu');
+    }
+  };
+
   // Navigation State
   const [activeTab, setActiveTab] = useState<ActiveTab>('menu');
 
@@ -60,7 +109,7 @@ export default function App() {
   const [isMobileCartOpen, setIsMobileCartOpen] = useState<boolean>(false);
 
   // Core Data POS
-  const [menuItems] = useState<MenuItem[]>(INITIAL_MENU_ITEMS);
+  const menuItems = INITIAL_MENU_ITEMS;
   const [tables, setTables] = useState<Table[]>(INITIAL_TABLES);
   const [orders, setOrders] = useState<Order[]>(INITIAL_ORDERS);
   const [inventoryItems, setInventoryItems] = useState<InventoryItem[]>(INITIAL_INVENTORY_ITEMS);
@@ -76,42 +125,48 @@ export default function App() {
 
   // Active Cart State
   const [orderNumber, setOrderNumber] = useState<number>(4092);
-  const [orderType, setOrderType] = useState<OrderType>('dine-in');
-  const [selectedTable, setSelectedTable] = useState<string>('Mesa 02');
-  const [selectedCustomer, setSelectedCustomer] = useState<string>('María Rodríguez');
-  const [selectedCustomerId, setSelectedCustomerId] = useState<string>('cust-1');
+  const [orderType, setOrderType] = useState<OrderType>('takeout');
+  const [selectedTable, setSelectedTable] = useState<string>('Mostrador');
+  const [selectedCustomer, setSelectedCustomer] = useState<string>('Cliente General');
+  const [selectedCustomerId, setSelectedCustomerId] = useState<string>('');
   const [orderNote, setOrderNote] = useState<string>('');
   const [discountPercent, setDiscountPercent] = useState<number>(0);
   const [searchQuery, setSearchQuery] = useState<string>('');
+
+  // Delivery State
+  const [deliveryAddress, setDeliveryAddress] = useState<string>('');
+  const [deliveryPhone, setDeliveryPhone] = useState<string>('');
+  const [deliveryNotes, setDeliveryNotes] = useState<string>('');
+  const [isDeliveryModalOpen, setIsDeliveryModalOpen] = useState<boolean>(false);
 
   // Initial cart items in COP
   const [cartItems, setCartItems] = useState<CartItem[]>([
     {
       id: 'cart-1',
-      menuItemId: 'pollo-entero',
-      name: 'Pollo Entero',
-      basePrice: 48000,
-      totalUnitPrice: 48000,
-      quantity: 2,
+      menuItemId: 'pollo-frito',
+      name: 'Pollo Frito',
+      basePrice: 35000,
+      totalUnitPrice: 35000,
+      quantity: 1,
       image:
-        'https://lh3.googleusercontent.com/aida-public/AB6AXuAzKG7OeffHF37LKwQ2RFSPAKUuec4rd0p_7t0Bf1p9Gz42xVrSPd5LfbGpha2xXWL9x0uZFeq2eT0aVkBtLzVuMj8X2kYZqGTVv4VAJpkol2-aqUF9r-BNhfjanGR4PdV4D5mXbZTzPg6uPV7_uzBSxplwxHpXD0oOCVcWB3VCzKEv_FrBKL4hhK7tRiBwxWbdaO1y5WmvxQ7FBGDkezxKwqWLwbLmU14ELIhDU_ur8QqXZO_1KYM',
+        'https://images.unsplash.com/photo-1626082927389-6cd097cdc6ec?w=600&auto=format&fit=crop&q=80',
       notes: 'Bien dorado',
       selectedModifiers: [
         {
           groupId: 'sauces',
           groupName: 'Salsas',
-          optionId: 'aji-extra',
-          name: 'Extra Ají Casero',
-          price: 2000
+          optionId: 'aji-casero',
+          name: 'Ají Casero Asadero',
+          price: 0
         }
       ]
     },
     {
       id: 'cart-2',
       menuItemId: 'yuca-frita',
-      name: 'Yuca Frita Crocante (L)',
-      basePrice: 12000,
-      totalUnitPrice: 12000,
+      name: 'Yuca Frita',
+      basePrice: 5000,
+      totalUnitPrice: 5000,
       quantity: 1,
       image:
         'https://images.unsplash.com/photo-1541592106381-b31e9677c0e5?w=600&auto=format&fit=crop&q=80',
@@ -119,10 +174,10 @@ export default function App() {
     },
     {
       id: 'cart-3',
-      menuItemId: 'inca-kola',
-      name: 'Inca Kola (1.5L)',
-      basePrice: 8000,
-      totalUnitPrice: 8000,
+      menuItemId: 'gaseosa-15',
+      name: 'Gaseosa 1.5 L',
+      basePrice: 7000,
+      totalUnitPrice: 7000,
       quantity: 1,
       image:
         'https://images.unsplash.com/photo-1622483767028-3f66f32aef97?w=600&auto=format&fit=crop&q=80',
@@ -136,36 +191,37 @@ export default function App() {
   const [isCloseDayOpen, setIsCloseDayOpen] = useState<boolean>(false);
   const [receiptOrder, setReceiptOrder] = useState<Order | null>(null);
 
-  // Cart operations
+  // Cart operations — Direct agile 1-click addition
   const handleSelectItem = (item: MenuItem) => {
-    if (item.availableModifiers && item.availableModifiers.length > 0) {
-      setCustomizingItem(item);
-    } else {
-      const existing = cartItems.find(
-        (ci) => ci.menuItemId === item.id && ci.selectedModifiers.length === 0
+    const existing = cartItems.find(
+      (ci) => ci.menuItemId === item.id && ci.selectedModifiers.length === 0
+    );
+    if (existing) {
+      setCartItems(
+        cartItems.map((ci) =>
+          ci.id === existing.id ? { ...ci, quantity: ci.quantity + 1 } : ci
+        )
       );
-      if (existing) {
-        setCartItems(
-          cartItems.map((ci) =>
-            ci.id === existing.id ? { ...ci, quantity: ci.quantity + 1 } : ci
-          )
-        );
-      } else {
-        setCartItems([
-          ...cartItems,
-          {
-            id: 'cart-' + Date.now(),
-            menuItemId: item.id,
-            name: item.name,
-            basePrice: item.price,
-            totalUnitPrice: item.price,
-            quantity: 1,
-            image: item.image,
-            selectedModifiers: []
-          }
-        ]);
-      }
+    } else {
+      setCartItems([
+        ...cartItems,
+        {
+          id: 'cart-' + Date.now() + '-' + Math.random().toString(36).substr(2, 4),
+          menuItemId: item.id,
+          name: item.name,
+          basePrice: item.price,
+          totalUnitPrice: item.price,
+          quantity: 1,
+          image: item.image,
+          selectedModifiers: []
+        }
+      ]);
     }
+  };
+
+  const handleCustomizeItem = (item: MenuItem) => {
+    setEditingCartItem(null);
+    setCustomizingItem(item);
   };
 
   const handleAddCustomizedItem = (
@@ -447,7 +503,10 @@ export default function App() {
       paidAmount: orderData.paidAmount,
       change: orderData.change,
       serverName: 'Carlos',
-      earnedPoints: pointsEarned
+      earnedPoints: pointsEarned,
+      deliveryAddress: orderData.deliveryAddress || deliveryAddress,
+      deliveryPhone: orderData.deliveryPhone || deliveryPhone,
+      deliveryNotes: orderData.deliveryNotes || deliveryNotes
     };
 
     setOrders([finalOrder, ...orders]);
@@ -553,9 +612,13 @@ export default function App() {
     setCartItems([]);
     setDiscountPercent(0);
     setOrderNote('');
-    setSelectedTable('Mesa 01');
-    setSelectedCustomer('Comensal General');
+    setOrderType('takeout');
+    setSelectedTable('Mostrador');
+    setSelectedCustomer('Cliente General');
     setSelectedCustomerId('');
+    setDeliveryAddress('');
+    setDeliveryPhone('');
+    setDeliveryNotes('');
     setActiveTab('menu');
   };
 
@@ -572,7 +635,7 @@ export default function App() {
   ).length;
 
   return (
-    <div className="h-screen w-screen flex overflow-hidden bg-[#131313] text-[#e5e2e1] relative">
+    <div className="h-screen w-screen flex overflow-hidden bg-background text-slate-900 dark:text-slate-100 transition-colors duration-200 relative select-none">
       {/* 1. Left Navigation Drawer (POS & ERP Unified) */}
       <NavigationDrawer
         activeTab={activeTab}
@@ -592,6 +655,11 @@ export default function App() {
         onTogglePin={() => setIsNavPinned(!isNavPinned)}
         isOpenMobile={isMobileNavOpen}
         onCloseMobile={() => setIsMobileNavOpen(false)}
+        theme={theme}
+        onToggleTheme={handleToggleTheme}
+        isAdminUnlocked={isAdminUnlocked}
+        onRequestUnlockAdmin={handleRequestUnlockAdmin}
+        onLockAdmin={handleLockAdmin}
       />
 
       {/* 2. Main Workspace Canvas */}
@@ -605,6 +673,11 @@ export default function App() {
           onOpenMobileNav={() => setIsMobileNavOpen(true)}
           isNavPinned={isNavPinned}
           onToggleNavPin={() => setIsNavPinned(!isNavPinned)}
+          theme={theme}
+          onToggleTheme={handleToggleTheme}
+          isAdminUnlocked={isAdminUnlocked}
+          onRequestUnlockAdmin={() => handleRequestUnlockAdmin('dashboard', 'Suite ERP')}
+          onLockAdmin={handleLockAdmin}
         />
 
         {/* Tab Router */}
@@ -615,6 +688,8 @@ export default function App() {
                 menuItems={menuItems}
                 cartItems={cartItems}
                 onSelectItem={handleSelectItem}
+                onUpdateQuantity={handleUpdateQuantity}
+                onCustomizeItem={handleCustomizeItem}
                 searchQuery={searchQuery}
               />
 
@@ -637,6 +712,10 @@ export default function App() {
                 onClearCart={handleClearCart}
                 isOpenMobileCart={isMobileCartOpen}
                 onCloseMobileCart={() => setIsMobileCartOpen(false)}
+                deliveryAddress={deliveryAddress}
+                deliveryPhone={deliveryPhone}
+                deliveryNotes={deliveryNotes}
+                onOpenDeliveryModal={() => setIsDeliveryModalOpen(true)}
               />
             </>
           )}
@@ -662,6 +741,10 @@ export default function App() {
               discountPercent={discountPercent}
               onFinishOrder={handleFinishOrder}
               onBackToMenu={() => setActiveTab('menu')}
+              deliveryAddress={deliveryAddress}
+              deliveryPhone={deliveryPhone}
+              deliveryNotes={deliveryNotes}
+              onOpenDeliveryModal={() => setIsDeliveryModalOpen(true)}
             />
           )}
 
@@ -783,6 +866,32 @@ export default function App() {
         isOpen={!!receiptOrder}
         onClose={() => setReceiptOrder(null)}
         onNewOrder={handleStartNewOrder}
+      />
+
+      <DeliveryInfoModal
+        isOpen={isDeliveryModalOpen}
+        onClose={() => setIsDeliveryModalOpen(false)}
+        initialAddress={deliveryAddress}
+        initialPhone={deliveryPhone}
+        initialCustomerName={selectedCustomer}
+        initialNotes={deliveryNotes}
+        onSave={({ address, phone, customerName, notes }) => {
+          setDeliveryAddress(address);
+          setDeliveryPhone(phone);
+          if (customerName) setSelectedCustomer(customerName);
+          setDeliveryNotes(notes);
+        }}
+      />
+
+      <AdminPinModal
+        isOpen={isPinModalOpen}
+        onClose={() => {
+          setIsPinModalOpen(false);
+          setTargetErpTab(null);
+        }}
+        onSuccess={handlePinSuccess}
+        correctPin={companySettings.adminPin || '1234'}
+        targetModuleName={targetErpTab?.title || 'Suite ERP'}
       />
     </div>
   );

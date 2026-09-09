@@ -19,9 +19,12 @@ interface BillSidebarProps {
   orderNote: string;
   onSetOrderNote: (note: string) => void;
   onClearCart: () => void;
-  // Mobile / Responsive props
   isOpenMobileCart?: boolean;
   onCloseMobileCart?: () => void;
+  deliveryAddress?: string;
+  deliveryPhone?: string;
+  deliveryNotes?: string;
+  onOpenDeliveryModal?: () => void;
 }
 
 export const BillSidebar: React.FC<BillSidebarProps> = ({
@@ -42,7 +45,11 @@ export const BillSidebar: React.FC<BillSidebarProps> = ({
   onSetOrderNote,
   onClearCart,
   isOpenMobileCart,
-  onCloseMobileCart
+  onCloseMobileCart,
+  deliveryAddress,
+  deliveryPhone,
+  deliveryNotes,
+  onOpenDeliveryModal
 }) => {
   const [showNoteModal, setShowNoteModal] = useState(false);
   const [tempNote, setTempNote] = useState(orderNote);
@@ -64,8 +71,19 @@ export const BillSidebar: React.FC<BillSidebarProps> = ({
   };
 
   const handleProceedPayAndCloseMobile = () => {
+    if (orderType === 'delivery' && !deliveryAddress?.trim() && onOpenDeliveryModal) {
+      onOpenDeliveryModal();
+      return;
+    }
     onProceedToPay();
     if (onCloseMobileCart) onCloseMobileCart();
+  };
+
+  const handleSelectDelivery = () => {
+    onOrderTypeChange('delivery');
+    if (!deliveryAddress?.trim() && onOpenDeliveryModal) {
+      onOpenDeliveryModal();
+    }
   };
 
   return (
@@ -74,36 +92,35 @@ export const BillSidebar: React.FC<BillSidebarProps> = ({
       {isOpenMobileCart && (
         <div
           onClick={onCloseMobileCart}
-          className="fixed inset-0 bg-black/80 backdrop-blur-sm z-40 lg:hidden transition-opacity"
+          className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 lg:hidden transition-opacity"
         />
       )}
 
       <aside
         id="bill-sidebar"
-        className={`fixed lg:relative top-0 bottom-0 right-0 z-50 lg:z-20 w-full sm:w-[360px] lg:w-[340px] xl:w-[380px] bg-[#1b1c1c] border-l border-[#5b403d]/40 flex flex-col h-full shrink-0 shadow-[-6px_0_30px_rgba(0,0,0,0.6)] select-none drawer-transition ${
+        className={`fixed lg:relative top-0 bottom-0 right-0 z-50 lg:z-20 w-full sm:w-[350px] lg:w-[330px] xl:w-[360px] bg-surface border-l border-border-subtle flex flex-col h-full shrink-0 shadow-2xl lg:shadow-none select-none drawer-transition ${
           isOpenMobileCart ? 'translate-x-0' : 'translate-x-full lg:translate-x-0'
         }`}
       >
         {/* Bill Header */}
-        <div className="p-4 sm:p-5 border-b border-[#5b403d]/40 bg-[#1b1c1c] space-y-3">
+        <div className="p-4 border-b border-border-subtle bg-surface space-y-3 shrink-0">
           <div className="flex justify-between items-center">
             <div className="flex items-center gap-2">
-              {/* Mobile Close Button */}
               {onCloseMobileCart && (
                 <button
                   onClick={onCloseMobileCart}
-                  className="lg:hidden p-1 rounded-lg bg-[#2a2a2a] text-[#e4beba] hover:text-white"
+                  className="lg:hidden p-1 rounded-lg bg-surface-elevated text-slate-500 hover:text-slate-900 dark:hover:text-white"
                 >
                   <span className="material-symbols-outlined text-lg">close</span>
                 </button>
               )}
-              <h2 className="text-lg sm:text-xl font-extrabold text-white tracking-tight">
-                Order #{orderNumber}
+              <h2 className="text-base sm:text-lg font-black text-slate-900 dark:text-white tracking-tight">
+                Orden #{orderNumber}
               </h2>
               {items.length > 0 && (
                 <button
                   onClick={onClearCart}
-                  className="text-[11px] text-[#ffb3ac] hover:text-red-400 font-bold hover:underline"
+                  className="text-[11px] text-red-600 dark:text-red-400 font-bold hover:underline cursor-pointer ml-1"
                   title="Vaciar orden"
                 >
                   Limpiar
@@ -111,69 +128,83 @@ export const BillSidebar: React.FC<BillSidebarProps> = ({
               )}
             </div>
 
-            {/* Dine-In / Takeout / Delivery Switcher */}
-            <div className="flex gap-1 bg-[#2a2a2a] p-1 rounded-lg border border-[#5b403d]/30">
-              <button
-                onClick={() => onOrderTypeChange('dine-in')}
-                className={`px-2 sm:px-2.5 py-1 rounded-md text-[11px] sm:text-xs font-bold transition-all cursor-pointer ${
-                  orderType === 'dine-in'
-                    ? 'bg-[#f8bd2a] text-[#402d00]'
-                    : 'text-[#e4beba]/70 hover:text-white'
-                }`}
-              >
-                Mesa
-              </button>
+            {/* Takeout / Delivery Switcher */}
+            <div className="flex gap-1 bg-surface-elevated p-1 rounded-xl border border-border-subtle">
               <button
                 onClick={() => onOrderTypeChange('takeout')}
-                className={`px-2 sm:px-2.5 py-1 rounded-md text-[11px] sm:text-xs font-bold transition-all cursor-pointer ${
-                  orderType === 'takeout'
-                    ? 'bg-[#f8bd2a] text-[#402d00]'
-                    : 'text-[#e4beba]/70 hover:text-white'
+                className={`px-3 py-1 rounded-lg text-[11px] font-bold transition-all cursor-pointer ${
+                  orderType !== 'delivery'
+                    ? 'bg-amber-400 text-amber-950 font-black shadow-sm'
+                    : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                 }`}
               >
-                Llevar
+                Para Llevar
               </button>
               <button
-                onClick={() => onOrderTypeChange('delivery')}
-                className={`px-2 sm:px-2.5 py-1 rounded-md text-[11px] sm:text-xs font-bold transition-all cursor-pointer ${
+                onClick={handleSelectDelivery}
+                className={`px-3 py-1 rounded-lg text-[11px] font-bold transition-all cursor-pointer flex items-center gap-1 ${
                   orderType === 'delivery'
-                    ? 'bg-[#f8bd2a] text-[#402d00]'
-                    : 'text-[#e4beba]/70 hover:text-white'
+                    ? 'bg-red-600 text-white font-black shadow-sm'
+                    : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                 }`}
               >
-                Domicilio
+                <span>Domicilio</span>
               </button>
             </div>
           </div>
 
-          {/* Table and Customer selector pill */}
-          <div
-            onClick={onSelectTable}
-            className="flex items-center justify-between p-2.5 bg-[#202020] hover:bg-[#2a2a2a] border border-[#5b403d]/30 rounded-xl cursor-pointer transition-colors"
-          >
-            <div className="flex items-center gap-2 text-xs text-[#e4beba]">
-              <span className="material-symbols-outlined text-base text-[#ffb3ac]">
-                table_restaurant
-              </span>
-              <span className="font-bold text-white">
-                {tableName || 'Sin Mesa Asignada'}
-              </span>
-              <span className="text-[#e4beba]/60 truncate max-w-[120px]">
-                • {customerName || 'Cliente Mostrador'}
-              </span>
+          {/* Delivery Details Pill (Only shown for delivery) */}
+          {orderType === 'delivery' && (
+            <div
+              onClick={onOpenDeliveryModal}
+              className={`p-2.5 rounded-xl border transition-all cursor-pointer ${
+                deliveryAddress
+                  ? 'bg-amber-500/10 border-amber-500/30 text-amber-900 dark:text-amber-200 hover:bg-amber-500/15'
+                  : 'bg-red-500/10 border-red-500/30 text-red-700 dark:text-red-400 hover:bg-red-500/20'
+              }`}
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-1.5 text-xs font-black">
+                  <span className="material-symbols-outlined text-base text-red-600 dark:text-red-400">
+                    two_wheeler
+                  </span>
+                  <span>PEDIDO A DOMICILIO</span>
+                </div>
+                <span className="text-[10px] font-bold text-red-600 dark:text-red-400 underline">
+                  {deliveryAddress ? 'Cambiar Dirección' : '⚠️ Ingresar Dirección'}
+                </span>
+              </div>
+              {deliveryAddress ? (
+                <div className="mt-1.5 space-y-0.5 text-xs">
+                  <p className="font-black text-slate-900 dark:text-white truncate">
+                    📍 {deliveryAddress}
+                  </p>
+                  <div className="flex items-center gap-2 text-[11px] text-slate-600 dark:text-slate-300">
+                    <span>👤 {customerName || 'Cliente Domicilio'}</span>
+                    {deliveryPhone && <span>• 📞 {deliveryPhone}</span>}
+                  </div>
+                  {deliveryNotes && (
+                    <p className="text-[10px] text-amber-700 dark:text-amber-400 italic truncate">
+                      *{deliveryNotes}
+                    </p>
+                  )}
+                </div>
+              ) : (
+                <p className="text-xs font-bold text-red-600 dark:text-red-400 mt-1 flex items-center gap-1">
+                  <span className="material-symbols-outlined text-sm">add_location_alt</span>
+                  <span>Toca aquí para ingresar la dirección de entrega</span>
+                </p>
+              )}
             </div>
-            <span className="material-symbols-outlined text-xs text-[#f8bd2a]">
-              arrow_forward_ios
-            </span>
-          </div>
+          )}
 
           {/* Order note preview if exists */}
           {orderNote && (
-            <div className="px-3 py-1.5 bg-[#d32f2f]/10 border border-[#d32f2f]/30 rounded-lg text-xs text-[#ffdad6] flex items-center justify-between">
-              <span className="truncate">Nota: {orderNote}</span>
+            <div className="px-3 py-1.5 bg-amber-500/10 border border-amber-500/30 rounded-xl text-xs text-amber-700 dark:text-amber-400 flex items-center justify-between">
+              <span className="truncate font-semibold">Nota: {orderNote}</span>
               <button
                 onClick={() => onSetOrderNote('')}
-                className="text-[#ffb3ac] font-bold text-xs ml-2 hover:text-white"
+                className="text-red-500 font-bold text-xs ml-2 hover:text-red-700 cursor-pointer"
               >
                 ✕
               </button>
@@ -184,28 +215,28 @@ export const BillSidebar: React.FC<BillSidebarProps> = ({
         {/* Bill Items List */}
         <div className="flex-1 overflow-y-auto px-4 py-2 custom-scrollbar">
           {items.length === 0 ? (
-            <div className="h-full flex flex-col items-center justify-center text-center p-6 text-[#e4beba]/50">
-              <span className="material-symbols-outlined text-5xl mb-2 text-[#5b403d]">
-                shopping_cart
-              </span>
-              <p className="text-sm font-bold text-[#e5e2e1]">La orden está vacía</p>
-              <p className="text-xs text-[#e4beba]/60 mt-1">
-                Selecciona productos del menú para agregarlos a la comanda.
+            <div className="h-full flex flex-col items-center justify-center text-center p-6 text-slate-400">
+              <div className="w-14 h-14 rounded-2xl bg-surface-elevated flex items-center justify-center text-slate-400 mb-2 border border-border-subtle">
+                <span className="material-symbols-outlined text-3xl">shopping_cart</span>
+              </div>
+              <p className="text-sm font-bold text-slate-900 dark:text-white">Comanda vacía</p>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 max-w-[200px]">
+                Selecciona platillos del menú para agregarlos a la orden.
               </p>
             </div>
           ) : (
-            <div className="divide-y divide-[#5b403d]/30">
+            <div className="divide-y divide-border-subtle">
               {items.map((item) => (
                 <div
                   key={item.id}
-                  className="py-3 group relative hover:bg-[#202020]/40 -mx-2 px-2 rounded-xl transition-colors"
+                  className="py-3 group relative hover:bg-surface-elevated/60 -mx-2 px-2 rounded-xl transition-colors"
                 >
                   {/* Item Name & Row Total */}
                   <div className="flex justify-between items-start mb-1">
-                    <h4 className="text-sm font-bold text-white leading-snug w-3/4">
+                    <h4 className="text-xs sm:text-sm font-extrabold text-slate-900 dark:text-white leading-snug w-3/4">
                       {item.name}
                     </h4>
-                    <span className="text-sm font-extrabold text-[#f8bd2a]">
+                    <span className="text-xs sm:text-sm font-black text-amber-600 dark:text-amber-400 font-mono">
                       {formatCOP(item.totalUnitPrice * item.quantity)}
                     </span>
                   </div>
@@ -216,13 +247,13 @@ export const BillSidebar: React.FC<BillSidebarProps> = ({
                       {item.selectedModifiers.map((m, idx) => (
                         <p
                           key={idx}
-                          className="text-xs text-[#e4beba]/70 pl-2 border-l-2 border-[#d32f2f]/60"
+                          className="text-[11px] text-slate-500 dark:text-slate-400 pl-2 border-l-2 border-red-500"
                         >
                           - {m.name} {m.price > 0 ? `(+${formatCOP(m.price)})` : ''}
                         </p>
                       ))}
                       {item.notes && (
-                        <p className="text-xs text-[#f8bd2a] pl-2 border-l-2 border-[#f8bd2a]">
+                        <p className="text-[11px] text-amber-600 dark:text-amber-400 pl-2 border-l-2 border-amber-500 font-semibold">
                           - {item.notes}
                         </p>
                       )}
@@ -231,21 +262,21 @@ export const BillSidebar: React.FC<BillSidebarProps> = ({
 
                   {/* Quantity Controls & Edit/Delete */}
                   <div className="flex items-center justify-between pt-1">
-                    <div className="flex items-center bg-[#2a2a2a] rounded-lg border border-[#5b403d]/40 overflow-hidden">
+                    <div className="flex items-center bg-surface-elevated rounded-xl border border-border-subtle overflow-hidden">
                       <button
                         onClick={() =>
                           onUpdateQuantity(item.id, Math.max(0, item.quantity - 1))
                         }
-                        className="w-8 h-8 flex items-center justify-center text-[#e4beba] hover:text-white hover:bg-[#353535] active:bg-[#d32f2f] transition-colors cursor-pointer"
+                        className="w-7 h-7 flex items-center justify-center text-slate-600 dark:text-slate-300 hover:bg-surface-hover hover:text-red-500 active:scale-95 transition-colors cursor-pointer"
                       >
                         <span className="material-symbols-outlined text-sm">remove</span>
                       </button>
-                      <span className="w-8 text-center font-extrabold text-xs text-white">
+                      <span className="w-7 text-center font-black text-xs text-slate-900 dark:text-white font-mono">
                         {item.quantity}
                       </span>
                       <button
                         onClick={() => onUpdateQuantity(item.id, item.quantity + 1)}
-                        className="w-8 h-8 flex items-center justify-center text-[#e4beba] hover:text-white hover:bg-[#353535] active:bg-[#d32f2f] transition-colors cursor-pointer"
+                        className="w-7 h-7 flex items-center justify-center text-slate-600 dark:text-slate-300 hover:bg-surface-hover hover:text-emerald-500 active:scale-95 transition-colors cursor-pointer"
                       >
                         <span className="material-symbols-outlined text-sm">add</span>
                       </button>
@@ -254,14 +285,14 @@ export const BillSidebar: React.FC<BillSidebarProps> = ({
                     <div className="flex items-center gap-1">
                       <button
                         onClick={() => onEditItem(item)}
-                        className="text-[#e4beba]/70 hover:text-[#f8bd2a] p-1.5 rounded-lg hover:bg-[#353535] transition-colors cursor-pointer"
+                        className="text-slate-400 hover:text-amber-500 p-1.5 rounded-lg hover:bg-surface-elevated transition-colors cursor-pointer"
                         title="Editar opciones"
                       >
                         <span className="material-symbols-outlined text-base">edit</span>
                       </button>
                       <button
                         onClick={() => onRemoveItem(item.id)}
-                        className="text-[#e4beba]/70 hover:text-[#ffb3ac] p-1.5 rounded-lg hover:bg-[#353535] transition-colors cursor-pointer"
+                        className="text-slate-400 hover:text-red-500 p-1.5 rounded-lg hover:bg-surface-elevated transition-colors cursor-pointer"
                         title="Eliminar producto"
                       >
                         <span className="material-symbols-outlined text-base">delete</span>
@@ -275,28 +306,28 @@ export const BillSidebar: React.FC<BillSidebarProps> = ({
         </div>
 
         {/* Bill Totals & Actions Bottom Section */}
-        <div className="bg-[#131313] p-4 sm:p-5 border-t border-[#5b403d]/50 shadow-[0_-8px_20px_rgba(0,0,0,0.5)]">
-          <div className="space-y-1.5 sm:space-y-2 mb-3 sm:mb-4">
-            <div className="flex justify-between text-xs text-[#e4beba]">
+        <div className="bg-surface-elevated p-4 border-t border-border-subtle shadow-sm shrink-0">
+          <div className="space-y-1.5 mb-3">
+            <div className="flex justify-between text-xs text-slate-500 dark:text-slate-400">
               <span>Subtotal</span>
-              <span className="font-semibold text-white">{formatCOP(subtotal)}</span>
+              <span className="font-semibold text-slate-900 dark:text-slate-200">{formatCOP(subtotal)}</span>
             </div>
 
             {discountPercent > 0 && (
-              <div className="flex justify-between text-xs text-[#7ddc7a]">
+              <div className="flex justify-between text-xs text-emerald-600 dark:text-emerald-400">
                 <span>Descuento ({discountPercent}%)</span>
                 <span className="font-bold">-{formatCOP(discountAmount)}</span>
               </div>
             )}
 
-            <div className="flex justify-between text-xs text-[#e4beba]">
-              <span>IVA (19%)</span>
-              <span className="font-semibold text-white">{formatCOP(tax)}</span>
+            <div className="flex justify-between text-xs text-slate-500 dark:text-slate-400">
+              <span>IVA / INC (19%)</span>
+              <span className="font-semibold text-slate-900 dark:text-slate-200">{formatCOP(tax)}</span>
             </div>
 
-            <div className="flex justify-between items-center text-white font-bold border-t border-[#5b403d]/40 pt-2">
-              <span className="text-sm sm:text-base tracking-tight">Total</span>
-              <span className="text-xl sm:text-2xl font-extrabold text-[#f8bd2a] tracking-tight">
+            <div className="flex justify-between items-center text-slate-900 dark:text-white font-bold border-t border-border-subtle pt-2">
+              <span className="text-sm tracking-tight font-black">Total</span>
+              <span className="text-xl font-black text-amber-600 dark:text-amber-400 tracking-tight font-mono">
                 {formatCOP(total)}
               </span>
             </div>
@@ -309,17 +340,17 @@ export const BillSidebar: React.FC<BillSidebarProps> = ({
                 setTempNote(orderNote);
                 setShowNoteModal(true);
               }}
-              className="h-10 sm:h-11 rounded-xl border border-[#d32f2f] text-[#ffb3ac] font-bold text-xs uppercase tracking-wider hover:bg-[#d32f2f]/15 transition-all flex items-center justify-center gap-1 cursor-pointer"
+              className="h-9 rounded-xl border border-border-subtle bg-surface hover:bg-surface-hover text-slate-700 dark:text-slate-200 font-bold text-xs transition-all flex items-center justify-center gap-1 cursor-pointer"
             >
-              <span className="material-symbols-outlined text-base">note_add</span>
+              <span className="material-symbols-outlined text-base text-amber-500">note_add</span>
               <span>Nota {orderNote ? '✓' : ''}</span>
             </button>
 
             <button
               onClick={() => setShowDiscountModal(true)}
-              className="h-10 sm:h-11 rounded-xl border border-[#d32f2f] text-[#ffb3ac] font-bold text-xs uppercase tracking-wider hover:bg-[#d32f2f]/15 transition-all flex items-center justify-center gap-1 cursor-pointer"
+              className="h-9 rounded-xl border border-border-subtle bg-surface hover:bg-surface-hover text-slate-700 dark:text-slate-200 font-bold text-xs transition-all flex items-center justify-center gap-1 cursor-pointer"
             >
-              <span className="material-symbols-outlined text-base">percent</span>
+              <span className="material-symbols-outlined text-base text-amber-500">percent</span>
               <span>Desc {discountPercent > 0 ? `(${discountPercent}%)` : ''}</span>
             </button>
           </div>
@@ -329,22 +360,22 @@ export const BillSidebar: React.FC<BillSidebarProps> = ({
             id="btn-pay-now"
             disabled={items.length === 0}
             onClick={handleProceedPayAndCloseMobile}
-            className={`w-full h-12 sm:h-14 font-extrabold text-base sm:text-lg rounded-2xl shadow-xl flex items-center justify-center gap-2 transition-all cursor-pointer ${
+            className={`w-full h-12 font-black text-base rounded-xl shadow-lg flex items-center justify-center gap-2 transition-all cursor-pointer active:scale-98 ${
               items.length > 0
-                ? 'bg-[#d32f2f] hover:bg-[#b71c1c] text-white active:scale-[0.98] shadow-red-950/60'
-                : 'bg-[#353535] text-[#e4beba]/40 cursor-not-allowed'
+                ? 'bg-red-600 hover:bg-red-700 text-white'
+                : 'bg-slate-300 dark:bg-slate-800 text-slate-500 dark:text-slate-500 cursor-not-allowed shadow-none'
             }`}
           >
-            <span className="material-symbols-outlined text-xl sm:text-2xl">payments</span>
-            <span>Pagar {formatCOP(total)}</span>
+            <span className="material-symbols-outlined text-xl">payments</span>
+            <span>Cobrar {formatCOP(total)}</span>
           </button>
         </div>
 
         {/* Note Modal */}
         {showNoteModal && (
-          <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4">
-            <div className="bg-[#202020] border border-[#5b403d] rounded-2xl p-5 max-w-sm w-full space-y-4 shadow-2xl">
-              <h3 className="font-bold text-white text-base">
+          <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+            <div className="bg-surface border border-border-medium rounded-2xl p-5 max-w-sm w-full space-y-4 shadow-2xl animate-in zoom-in-95 duration-150">
+              <h3 className="font-bold text-slate-900 dark:text-white text-base">
                 Agregar Nota General a la Orden
               </h3>
               <textarea
@@ -352,18 +383,18 @@ export const BillSidebar: React.FC<BillSidebarProps> = ({
                 value={tempNote}
                 onChange={(e) => setTempNote(e.target.value)}
                 placeholder="Ej. Cumpleaños, enviar cubiertos extras, salsa en tarrina..."
-                className="w-full bg-[#2a2a2a] border border-[#5b403d]/50 focus:border-[#f8bd2a] text-white p-3 rounded-xl text-xs outline-none"
+                className="w-full bg-surface-elevated border border-border-subtle focus:border-amber-500 text-slate-900 dark:text-white p-3 rounded-xl text-xs outline-none"
               />
               <div className="flex gap-2">
                 <button
                   onClick={() => setShowNoteModal(false)}
-                  className="flex-1 py-2.5 border border-[#5b403d] text-[#e4beba] rounded-xl text-xs font-bold"
+                  className="flex-1 py-2.5 border border-border-subtle text-slate-600 dark:text-slate-300 rounded-xl text-xs font-bold hover:bg-surface-hover cursor-pointer"
                 >
                   Cancelar
                 </button>
                 <button
                   onClick={handleSaveNote}
-                  className="flex-1 py-2.5 bg-[#d32f2f] text-white rounded-xl text-xs font-bold"
+                  className="flex-1 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-xl text-xs font-bold shadow-md cursor-pointer"
                 >
                   Guardar Nota
                 </button>
@@ -374,9 +405,9 @@ export const BillSidebar: React.FC<BillSidebarProps> = ({
 
         {/* Discount Modal */}
         {showDiscountModal && (
-          <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4">
-            <div className="bg-[#202020] border border-[#5b403d] rounded-2xl p-5 max-w-xs w-full space-y-4 shadow-2xl">
-              <h3 className="font-bold text-white text-base">Aplicar Descuento</h3>
+          <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+            <div className="bg-surface border border-border-medium rounded-2xl p-5 max-w-xs w-full space-y-4 shadow-2xl animate-in zoom-in-95 duration-150">
+              <h3 className="font-bold text-slate-900 dark:text-white text-base">Aplicar Descuento</h3>
               <div className="grid grid-cols-2 gap-2">
                 {[0, 5, 10, 15, 20, 50].map((pct) => (
                   <button
@@ -385,10 +416,10 @@ export const BillSidebar: React.FC<BillSidebarProps> = ({
                       onApplyDiscount(pct);
                       setShowDiscountModal(false);
                     }}
-                    className={`py-3 rounded-xl font-bold text-sm border transition-all ${
+                    className={`py-3 rounded-xl font-bold text-sm border transition-all cursor-pointer ${
                       discountPercent === pct
-                        ? 'bg-[#d32f2f] text-white border-red-400'
-                        : 'bg-[#2a2a2a] text-[#e5e2e1] border-[#5b403d]/40 hover:bg-[#353535]'
+                        ? 'bg-red-600 text-white border-red-600 shadow-sm'
+                        : 'bg-surface-elevated text-slate-700 dark:text-slate-200 border-border-subtle hover:bg-surface-hover'
                     }`}
                   >
                     {pct === 0 ? 'Sin Descuento' : `${pct}%`}
@@ -397,7 +428,7 @@ export const BillSidebar: React.FC<BillSidebarProps> = ({
               </div>
               <button
                 onClick={() => setShowDiscountModal(false)}
-                className="w-full py-2 text-xs text-[#e4beba]/70 hover:underline"
+                className="w-full py-2 text-xs text-slate-500 dark:text-slate-400 hover:underline cursor-pointer"
               >
                 Cerrar
               </button>

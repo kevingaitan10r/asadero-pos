@@ -15,8 +15,11 @@ import {
   Recipe,
   StaffMember,
   CustomerProfile,
-  CompanySettings
+  CompanySettings,
+  AuthUser
 } from './types';
+import { authService } from './services/authService';
+import { LoginModal } from './components/LoginModal';
 import {
   INITIAL_MENU_ITEMS,
   INITIAL_TABLES,
@@ -73,12 +76,29 @@ export default function App() {
     setTheme((prev) => (prev === 'dark' ? 'light' : 'dark'));
   };
 
+  // Authentication & Current User State (Supabase / Local Session)
+  const [currentUser, setCurrentUser] = useState<AuthUser | null>(() => authService.getCurrentUser());
+
   // Admin PIN & ERP Access State
-  const [isAdminUnlocked, setIsAdminUnlocked] = useState<boolean>(false);
+  const [isAdminUnlocked, setIsAdminUnlocked] = useState<boolean>(() => {
+    const user = authService.getCurrentUser();
+    return user?.role === 'admin';
+  });
   const [isPinModalOpen, setIsPinModalOpen] = useState<boolean>(false);
   const [targetErpTab, setTargetErpTab] = useState<{ tab: ActiveTab; title: string } | null>(null);
 
+  const handleLogout = () => {
+    authService.logout();
+    setCurrentUser(null);
+    setIsAdminUnlocked(false);
+    setActiveTab('menu');
+  };
+
   const handleRequestUnlockAdmin = (targetTab: ActiveTab = 'dashboard', targetTitle = 'Suite ERP') => {
+    if (currentUser?.role !== 'admin') {
+      alert('Solo personal administrativo tiene acceso a este módulo.');
+      return;
+    }
     setTargetErpTab({ tab: targetTab, title: targetTitle });
     setIsPinModalOpen(true);
   };
@@ -101,6 +121,13 @@ export default function App() {
 
   // Navigation State
   const [activeTab, setActiveTab] = useState<ActiveTab>('menu');
+
+  // Enforce role permission whenever activeTab or currentUser changes
+  React.useEffect(() => {
+    if (currentUser && currentUser.role !== 'admin' && activeTab !== 'menu') {
+      setActiveTab('menu');
+    }
+  }, [currentUser, activeTab]);
 
   // Hover & Drawer Pin State
   const [isNavPinned, setIsNavPinned] = useState<boolean>(false);
@@ -444,6 +471,8 @@ export default function App() {
   const handleFinishOrder = (orderData: Partial<Order>) => {
     const pointsEarned = Math.floor((orderData.total || 0) / 1000);
 
+    const currentServerName = currentUser?.fullName || currentUser?.username || 'Carlos';
+
     const finalOrder: Order = {
       id: 'ORD-' + orderNumber,
       orderNumber,
@@ -462,7 +491,7 @@ export default function App() {
       paymentMethod: orderData.paymentMethod || 'cash',
       paidAmount: orderData.paidAmount,
       change: orderData.change,
-      serverName: 'Carlos',
+      serverName: currentServerName,
       earnedPoints: pointsEarned,
       deliveryAddress: orderData.deliveryAddress || deliveryAddress,
       deliveryPhone: orderData.deliveryPhone || deliveryPhone,
@@ -635,6 +664,22 @@ export default function App() {
     (item) => item.stockQuantity <= item.minStockThreshold
   ).length;
 
+  if (!currentUser) {
+    return (
+      <LoginModal
+        onLoginSuccess={(user) => {
+          setCurrentUser(user);
+          if (user.role === 'admin') {
+            setIsAdminUnlocked(true);
+          } else {
+            setIsAdminUnlocked(false);
+            setActiveTab('menu');
+          }
+        }}
+      />
+    );
+  }
+
   return (
     <div className="h-screen w-screen flex overflow-hidden bg-background text-slate-900 dark:text-slate-100 transition-colors duration-200 relative select-none">
       {/* 1. Left Navigation Drawer (POS & ERP Unified) */}
@@ -661,6 +706,8 @@ export default function App() {
         isAdminUnlocked={isAdminUnlocked}
         onRequestUnlockAdmin={handleRequestUnlockAdmin}
         onLockAdmin={handleLockAdmin}
+        currentUser={currentUser}
+        onLogout={handleLogout}
       />
 
       {/* 2. Main Workspace Canvas */}
@@ -679,6 +726,8 @@ export default function App() {
           isAdminUnlocked={isAdminUnlocked}
           onRequestUnlockAdmin={() => handleRequestUnlockAdmin('dashboard', 'Suite ERP')}
           onLockAdmin={handleLockAdmin}
+          currentUser={currentUser}
+          onLogout={handleLogout}
         />
 
         {/* Tab Router */}
@@ -852,7 +901,7 @@ export default function App() {
               <span>Ver Orden Actual</span>
             </div>
             <span className="text-lg font-black text-[#f8bd2a] tracking-tight">
-              {formatCOP(cartTotalAmount * 1.0825)}
+              {formatCOP(cartTotalAmount * 1.19)}
             </span>
           </button>
         </div>

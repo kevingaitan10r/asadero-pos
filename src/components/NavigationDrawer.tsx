@@ -1,6 +1,6 @@
 import React from 'react';
-import { ActiveTab } from '../types';
-import { ShieldCheck, Lock, Unlock } from 'lucide-react';
+import { ActiveTab, AuthUser } from '../types';
+import { ShieldCheck, Lock, Unlock, LogOut } from 'lucide-react';
 
 interface NavigationDrawerProps {
   activeTab: ActiveTab;
@@ -21,6 +21,8 @@ interface NavigationDrawerProps {
   isAdminUnlocked?: boolean;
   onRequestUnlockAdmin?: (targetTab: ActiveTab, targetTitle: string) => void;
   onLockAdmin?: () => void;
+  currentUser?: AuthUser | null;
+  onLogout?: () => void;
 }
 
 export const NavigationDrawer: React.FC<NavigationDrawerProps> = ({
@@ -39,7 +41,9 @@ export const NavigationDrawer: React.FC<NavigationDrawerProps> = ({
   onCloseMobile,
   isAdminUnlocked = false,
   onRequestUnlockAdmin,
-  onLockAdmin
+  onLockAdmin,
+  currentUser,
+  onLogout
 }) => {
   const isExpanded = isPinned || isHovered || isOpenMobile;
 
@@ -191,19 +195,21 @@ export const NavigationDrawer: React.FC<NavigationDrawerProps> = ({
             )}
           </button>
 
-          {/* Checkout Tab */}
-          <button
-            onClick={() => handleSelectTab('checkout')}
-            title="Caja & Facturación POS"
-            className={navItemClass('checkout')}
-          >
-            <div className="flex items-center gap-2.5">
-              <span className={`material-symbols-outlined text-xl ${activeTab === 'checkout' ? 'filled text-white' : 'text-slate-400'}`}>
-                point_of_sale
-              </span>
-              {isExpanded && <span>Caja & Cobro POS</span>}
-            </div>
-          </button>
+          {/* Checkout Tab (Only for Admin) */}
+          {(!currentUser || currentUser.role === 'admin') && (
+            <button
+              onClick={() => handleSelectTab('checkout')}
+              title="Caja & Facturación POS"
+              className={navItemClass('checkout')}
+            >
+              <div className="flex items-center gap-2.5">
+                <span className={`material-symbols-outlined text-xl ${activeTab === 'checkout' ? 'filled text-white' : 'text-slate-400'}`}>
+                  point_of_sale
+                </span>
+                {isExpanded && <span>Caja & Cobro POS</span>}
+              </div>
+            </button>
+          )}
 
           {/* SECTION 2: INTEGRAL ERP SUITE (SHOWN ONLY WHEN UNLOCKED) */}
           {isAdminUnlocked ? (
@@ -323,9 +329,9 @@ export const NavigationDrawer: React.FC<NavigationDrawerProps> = ({
                   {isExpanded && <span>Configuración</span>}
                 </div>
               </button>
-            </>
-          ) : (
-            /* ERP Locked Quick Access Button */
+              </>
+          ) : (!currentUser || currentUser.role === 'admin') ? (
+            /* ERP Locked Quick Access Button (Only for Admin) */
             <div className="mt-3 pt-3 border-t border-border-subtle">
               <button
                 onClick={() => onRequestUnlockAdmin && onRequestUnlockAdmin('dashboard', 'Suite ERP')}
@@ -348,46 +354,58 @@ export const NavigationDrawer: React.FC<NavigationDrawerProps> = ({
                 {isExpanded && <Lock size={13} className="text-amber-500" />}
               </button>
             </div>
-          )}
+          ) : null}
         </nav>
 
-        {/* Close Day Action Button */}
-        <div className="px-3 mt-2">
-          <button
-            id="btn-close-day"
-            onClick={() => {
-              onOpenCloseDay();
-              if (isOpenMobile) onCloseMobile();
-            }}
-            title="Arqueo & Cierre de Caja"
-            className={`w-full flex justify-center items-center gap-2 ${
-              isExpanded ? 'h-10 px-3' : 'h-10 px-0'
-            } bg-red-600 hover:bg-red-700 text-white font-extrabold text-xs rounded-xl shadow-md transition-all cursor-pointer active:scale-95`}
-          >
-            <span className="material-symbols-outlined text-lg">lock</span>
-            {isExpanded && <span>Arqueo / Cierre Caja</span>}
-          </button>
-        </div>
+        {/* Close Day Action Button (Only for Admin) */}
+        {(!currentUser || currentUser.role === 'admin') && (
+          <div className="px-3 mt-2">
+            <button
+              id="btn-close-day"
+              onClick={() => {
+                onOpenCloseDay();
+                if (isOpenMobile) onCloseMobile();
+              }}
+              title="Arqueo & Cierre de Caja"
+              className={`w-full flex justify-center items-center gap-2 ${
+                isExpanded ? 'h-10 px-3' : 'h-10 px-0'
+              } bg-red-600 hover:bg-red-700 text-white font-extrabold text-xs rounded-xl shadow-md transition-all cursor-pointer active:scale-95`}
+            >
+              <span className="material-symbols-outlined text-lg">lock</span>
+              {isExpanded && <span>Arqueo / Cierre Caja</span>}
+            </button>
+          </div>
+        )}
 
         {/* Shift and User Info */}
         <div className={`mt-auto pt-2.5 border-t border-border-subtle flex items-center ${
           isExpanded ? 'px-4 justify-between' : 'px-1 justify-center'
         }`}>
-          <div className="flex items-center gap-2.5">
-            <div className={`w-8 h-8 rounded-full ${isAdminUnlocked ? 'bg-gradient-to-br from-purple-600 to-indigo-600' : 'bg-red-600'} text-white flex items-center justify-center font-bold text-xs shadow shrink-0`}>
-              {isAdminUnlocked ? <ShieldCheck size={16} /> : 'POS'}
+          <div className="flex items-center gap-2.5 min-w-0">
+            <div className={`w-8 h-8 rounded-full ${currentUser?.role === 'admin' ? 'bg-amber-600' : 'bg-red-600'} text-white flex items-center justify-center font-bold text-xs shadow shrink-0`}>
+              {currentUser ? currentUser.fullName.charAt(0).toUpperCase() : 'POS'}
             </div>
             {isExpanded && (
-              <div className="overflow-hidden">
+              <div className="overflow-hidden min-w-0">
                 <p className="font-bold text-xs text-slate-900 dark:text-slate-100 truncate">
-                  {isAdminUnlocked ? 'Administrador' : 'Terminal Salón'}
+                  {currentUser ? currentUser.fullName : 'Terminal Salón'}
                 </p>
-                <p className="text-[10px] text-slate-500 dark:text-slate-400">
-                  {isAdminUnlocked ? 'Acceso Total ERP' : 'Modo Atención al Cliente'}
+                <p className="text-[10px] text-slate-500 dark:text-slate-400 truncate">
+                  {currentUser?.role === 'admin' ? 'Administrador General' : 'Mesero (Toma de Pedidos)'}
                 </p>
               </div>
             )}
           </div>
+
+          {isExpanded && onLogout && (
+            <button
+              onClick={onLogout}
+              className="p-1.5 rounded-lg bg-surface-elevated hover:bg-red-500/10 hover:text-red-600 text-slate-400 transition-colors cursor-pointer shrink-0"
+              title="Cerrar Turno / Salir"
+            >
+              <LogOut size={15} />
+            </button>
+          )}
         </div>
       </aside>
     </>

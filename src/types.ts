@@ -199,9 +199,19 @@ export interface PurchaseOrder {
 export type StaffRole = 'admin' | 'cajero' | 'parrillero' | 'mesero' | 'repartidor';
 export type ShiftStatus = 'clocked_in' | 'clocked_out' | 'on_break';
 
+export interface AuthUser {
+  id: string;
+  username: string;
+  email: string;
+  fullName: string;
+  role: 'admin' | 'mesero' | 'cajero' | 'parrillero';
+  phone?: string;
+}
+
 export interface StaffMember {
   id: string;
   name: string;
+  username?: string;
   role: StaffRole;
   phone: string;
   email: string;

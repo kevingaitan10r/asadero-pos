@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { AuthUser } from '../types';
 
 interface TopAppBarProps {
   searchQuery: string;
@@ -13,6 +14,8 @@ interface TopAppBarProps {
   isAdminUnlocked?: boolean;
   onLockAdmin?: () => void;
   onRequestUnlockAdmin?: () => void;
+  currentUser?: AuthUser | null;
+  onLogout?: () => void;
 }
 
 export const TopAppBar: React.FC<TopAppBarProps> = ({
@@ -27,7 +30,9 @@ export const TopAppBar: React.FC<TopAppBarProps> = ({
   onToggleTheme,
   isAdminUnlocked = false,
   onLockAdmin,
-  onRequestUnlockAdmin
+  onRequestUnlockAdmin,
+  currentUser,
+  onLogout
 }) => {
   const [time, setTime] = useState<string>('');
   const [date, setDate] = useState<string>('');
@@ -239,6 +244,39 @@ export const TopAppBar: React.FC<TopAppBarProps> = ({
             </div>
           )}
         </div>
+
+        {/* Active User Profile & Logout Button */}
+        {currentUser && (
+          <div className="flex items-center gap-1.5 pl-1.5 border-l border-border-subtle">
+            <div className="flex items-center gap-2 px-2.5 py-1 rounded-xl bg-surface-elevated border border-border-subtle">
+              <div
+                className={`w-6 h-6 rounded-lg flex items-center justify-center text-xs font-black text-white shrink-0 ${
+                  currentUser.role === 'admin' ? 'bg-amber-600' : 'bg-red-600'
+                }`}
+              >
+                {currentUser.fullName.charAt(0).toUpperCase()}
+              </div>
+              <div className="hidden md:flex flex-col text-left">
+                <span className="text-xs font-bold text-slate-900 dark:text-white leading-tight truncate max-w-[120px]">
+                  {currentUser.fullName}
+                </span>
+                <span className="text-[10px] text-slate-500 dark:text-slate-400 capitalize font-medium">
+                  {currentUser.role === 'admin' ? 'Administrador' : 'Mesero'}
+                </span>
+              </div>
+            </div>
+
+            {onLogout && (
+              <button
+                onClick={onLogout}
+                className="w-9 h-9 rounded-xl bg-surface-elevated hover:bg-red-500/10 hover:text-red-600 text-slate-500 border border-border-subtle flex items-center justify-center transition-all cursor-pointer"
+                title="Cerrar Sesión / Salir"
+              >
+                <span className="material-symbols-outlined text-lg">logout</span>
+              </button>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Mobile Search Overlay Bar */}

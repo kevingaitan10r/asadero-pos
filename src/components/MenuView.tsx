@@ -72,21 +72,40 @@ export const MenuView: React.FC<MenuViewProps> = ({
 
   return (
     <div className="flex-1 flex flex-col h-full overflow-hidden select-none bg-background">
-      {/* Top Clean Bar */}
-      <div className="bg-surface border-b border-border-subtle px-4 py-2.5 flex items-center justify-between gap-3 shrink-0">
-        <div className="flex items-center gap-2">
+      {/* Top Clean Category Bar with Horizontal Touch Chips */}
+      <div className="bg-surface border-b border-border-subtle px-3 sm:px-4 py-2 flex items-center justify-between gap-2 shrink-0 overflow-x-auto custom-scrollbar">
+        <div className="flex items-center gap-1.5 shrink-0">
           <button
             onClick={() => setActiveFilter('all')}
-            className="px-3.5 py-1.5 rounded-xl text-xs font-black transition-all cursor-pointer whitespace-nowrap flex items-center gap-1.5 bg-slate-900 dark:bg-white text-white dark:text-slate-900 shadow-sm"
+            className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all cursor-pointer whitespace-nowrap flex items-center gap-1.5 ${
+              activeFilter === 'all'
+                ? 'bg-slate-900 dark:bg-white text-white dark:text-slate-900 shadow-sm'
+                : 'bg-surface-elevated text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white border border-border-subtle'
+            }`}
           >
             <span className="material-symbols-outlined text-sm">menu_book</span>
-            <span>Todos ({menuItems.length})</span>
+            <span>Todos</span>
           </button>
+
+          {SECTIONS.map((sec) => (
+            <button
+              key={sec.id}
+              onClick={() => setActiveFilter(sec.id)}
+              className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all cursor-pointer whitespace-nowrap flex items-center gap-1.5 ${
+                activeFilter === sec.id
+                  ? 'bg-red-600 text-white shadow-sm'
+                  : 'bg-surface-elevated text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white border border-border-subtle'
+              }`}
+            >
+              <span className="material-symbols-outlined text-sm">{sec.icon}</span>
+              <span>{sec.label}</span>
+            </button>
+          ))}
         </div>
 
-        <div className="text-[11px] text-slate-500 dark:text-slate-400 font-medium hidden md:flex items-center gap-1.5">
+        <div className="text-[11px] text-slate-500 dark:text-slate-400 font-medium hidden lg:flex items-center gap-1.5 shrink-0">
           <span className="material-symbols-outlined text-xs text-amber-500">touch_app</span>
-          <span>Toque cualquier producto para agregarlo directamente</span>
+          <span>1 toque para agregar a comanda</span>
         </div>
       </div>
 

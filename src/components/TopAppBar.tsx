@@ -149,25 +149,27 @@ export const TopAppBar: React.FC<TopAppBarProps> = ({
 
       {/* Right Controls (Mode Lock Button, Theme Toggle, Active Table, Clock, Notifications) */}
       <div className="flex items-center gap-2 sm:gap-3">
-        {/* Quick Admin Unlock / Lock Button */}
-        {isAdminUnlocked ? (
-          <button
-            onClick={onLockAdmin}
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-purple-500/15 hover:bg-purple-500/25 border border-purple-500/30 text-purple-700 dark:text-purple-300 rounded-xl text-xs font-black transition-all cursor-pointer active:scale-95 shadow-xs"
-            title="Cerrar sesión de administrador y proteger ERP"
-          >
-            <span className="material-symbols-outlined text-sm">lock_open</span>
-            <span className="hidden sm:inline">Bloquear ERP</span>
-          </button>
-        ) : (
-          <button
-            onClick={onRequestUnlockAdmin}
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-surface-elevated hover:bg-surface-hover border border-border-subtle text-slate-700 dark:text-slate-200 rounded-xl text-xs font-bold transition-all cursor-pointer active:scale-95 shadow-xs"
-            title="Ingresar PIN de administrador para abrir ERP"
-          >
-            <span className="material-symbols-outlined text-sm text-purple-500">shield</span>
-            <span className="hidden sm:inline">Acceso ERP</span>
-          </button>
+        {/* Quick Admin Unlock / Lock Button (Only visible for Admin) */}
+        {currentUser?.role === 'admin' && (
+          isAdminUnlocked ? (
+            <button
+              onClick={onLockAdmin}
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-purple-500/15 hover:bg-purple-500/25 border border-purple-500/30 text-purple-700 dark:text-purple-300 rounded-xl text-xs font-black transition-all cursor-pointer active:scale-95 shadow-xs"
+              title="Cerrar sesión de administrador y proteger ERP"
+            >
+              <span className="material-symbols-outlined text-sm">lock_open</span>
+              <span className="hidden sm:inline">Bloquear ERP</span>
+            </button>
+          ) : (
+            <button
+              onClick={onRequestUnlockAdmin}
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-surface-elevated hover:bg-surface-hover border border-border-subtle text-slate-700 dark:text-slate-200 rounded-xl text-xs font-bold transition-all cursor-pointer active:scale-95 shadow-xs"
+              title="Ingresar PIN de administrador para abrir ERP"
+            >
+              <span className="material-symbols-outlined text-sm text-purple-500">shield</span>
+              <span className="hidden sm:inline">Acceso ERP</span>
+            </button>
+          )
         )}
         {/* Mobile Search Toggle Button */}
         <button

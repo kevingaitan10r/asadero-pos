@@ -360,7 +360,7 @@ export const NavigationDrawer: React.FC<NavigationDrawerProps> = ({
                 </div>
               </button>
               </>
-          ) : (!currentUser || currentUser.role === 'admin') ? (
+          ) : currentUser?.role === 'admin' ? (
             /* ERP Locked Quick Access Button (Only for Admin) */
             <div className="mt-3 pt-3 border-t border-border-subtle">
               <button
@@ -388,7 +388,7 @@ export const NavigationDrawer: React.FC<NavigationDrawerProps> = ({
         </nav>
 
         {/* Close Day Action Button (Only for Admin) */}
-        {(!currentUser || currentUser.role === 'admin') && (
+        {currentUser?.role === 'admin' && (
           <div className="px-3 mt-2">
             <button
               id="btn-close-day"
@@ -412,7 +412,7 @@ export const NavigationDrawer: React.FC<NavigationDrawerProps> = ({
           isExpanded ? 'px-4 justify-between' : 'px-1 justify-center'
         }`}>
           <div className="flex items-center gap-2.5 min-w-0">
-            <div className={`w-8 h-8 rounded-full ${currentUser?.role === 'admin' ? 'bg-amber-600' : 'bg-red-600'} text-white flex items-center justify-center font-bold text-xs shadow shrink-0`}>
+            <div className={`w-8 h-8 rounded-full ${currentUser?.role === 'admin' ? 'bg-amber-600' : currentUser?.role === 'cajero' ? 'bg-blue-600' : 'bg-red-600'} text-white flex items-center justify-center font-bold text-xs shadow shrink-0`}>
               {currentUser ? currentUser.fullName.charAt(0).toUpperCase() : 'POS'}
             </div>
             {isExpanded && (
@@ -421,7 +421,11 @@ export const NavigationDrawer: React.FC<NavigationDrawerProps> = ({
                   {currentUser ? currentUser.fullName : 'Terminal Salón'}
                 </p>
                 <p className="text-[10px] text-slate-500 dark:text-slate-400 truncate">
-                  {currentUser?.role === 'admin' ? 'Administrador General' : 'Mesero (Toma de Pedidos)'}
+                  {currentUser?.role === 'admin'
+                    ? 'Administrador General'
+                    : currentUser?.role === 'cajero'
+                    ? 'Cajero (Terminal de Cobro)'
+                    : 'Mesero (Toma de Pedidos)'}
                 </p>
               </div>
             )}

@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { AuthUser } from '../types';
 import { authService } from '../services/authService';
 import { isSupabaseConfigured } from '../services/supabaseClient';
-import { Lock, User, KeyRound, AlertCircle, ArrowRight, Smartphone, ShieldCheck, CheckCircle2 } from 'lucide-react';
+import { Lock, User, KeyRound, AlertCircle, ArrowRight, Smartphone, ShieldCheck, CheckCircle2, Monitor } from 'lucide-react';
 
 interface LoginModalProps {
   onLoginSuccess: (user: AuthUser) => void;
@@ -147,32 +147,46 @@ export const LoginModal: React.FC<LoginModalProps> = ({ onLoginSuccess }) => {
           <p className="text-[11px] font-bold text-slate-500 dark:text-slate-400 text-center mb-2.5">
             ⚡ Acceso Rápido para Pruebas:
           </p>
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-3 gap-2">
             <button
               type="button"
               onClick={() => handleQuickLogin('admin', 'admin123')}
-              className="p-2.5 rounded-xl bg-surface hover:bg-surface-elevated border border-border-subtle text-left transition-all cursor-pointer group"
+              className="p-2 rounded-xl bg-surface hover:bg-surface-elevated border border-border-subtle text-left transition-all cursor-pointer group"
             >
-              <div className="flex items-center gap-1 text-xs font-black text-slate-900 dark:text-white">
-                <ShieldCheck size={14} className="text-amber-500" />
-                <span>Admin</span>
+              <div className="flex items-center gap-1 text-[11px] font-black text-slate-900 dark:text-white">
+                <ShieldCheck size={13} className="text-amber-500 shrink-0" />
+                <span className="truncate">Admin</span>
               </div>
-              <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">
-                POS + ERP Completo
+              <p className="text-[9px] text-slate-500 dark:text-slate-400 mt-0.5 truncate">
+                POS + ERP
+              </p>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => handleQuickLogin('caja', 'caja123')}
+              className="p-2 rounded-xl bg-surface hover:bg-surface-elevated border border-border-subtle text-left transition-all cursor-pointer group"
+            >
+              <div className="flex items-center gap-1 text-[11px] font-black text-slate-900 dark:text-white">
+                <Monitor size={13} className="text-blue-500 shrink-0" />
+                <span className="truncate">Caja (PC)</span>
+              </div>
+              <p className="text-[9px] text-slate-500 dark:text-slate-400 mt-0.5 truncate">
+                Cobro & Caja
               </p>
             </button>
 
             <button
               type="button"
               onClick={() => handleQuickLogin('carlos', 'mesero123')}
-              className="p-2.5 rounded-xl bg-surface hover:bg-surface-elevated border border-border-subtle text-left transition-all cursor-pointer group"
+              className="p-2 rounded-xl bg-surface hover:bg-surface-elevated border border-border-subtle text-left transition-all cursor-pointer group"
             >
-              <div className="flex items-center gap-1 text-xs font-black text-slate-900 dark:text-white">
-                <Smartphone size={14} className="text-red-500" />
-                <span>Mesero (Carlos)</span>
+              <div className="flex items-center gap-1 text-[11px] font-black text-slate-900 dark:text-white">
+                <Smartphone size={13} className="text-red-500 shrink-0" />
+                <span className="truncate">Mesero</span>
               </div>
-              <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">
-                Solo Pedidos Móvil
+              <p className="text-[9px] text-slate-500 dark:text-slate-400 mt-0.5 truncate">
+                Pedidos Móvil
               </p>
             </button>
           </div>

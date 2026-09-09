@@ -176,6 +176,22 @@ export const NavigationDrawer: React.FC<NavigationDrawerProps> = ({
             </div>
           )}
 
+          {/* Terminal de Caja Tab (For Admin and Cajero) */}
+          {(!currentUser || currentUser.role === 'admin' || currentUser.role === 'cajero') && (
+            <button
+              onClick={() => handleSelectTab('cashier')}
+              title="Terminal de Caja & Cobro"
+              className={navItemClass('cashier')}
+            >
+              <div className="flex items-center gap-2.5">
+                <span className={`material-symbols-outlined text-xl ${activeTab === 'cashier' ? 'filled text-white' : 'text-slate-400'}`}>
+                  point_of_sale
+                </span>
+                {isExpanded && <span>Terminal de Caja</span>}
+              </div>
+            </button>
+          )}
+
           {/* Menu Tab */}
           <button
             onClick={() => handleSelectTab('menu')}
@@ -195,18 +211,32 @@ export const NavigationDrawer: React.FC<NavigationDrawerProps> = ({
             )}
           </button>
 
-          {/* Checkout Tab (Only for Admin) */}
-          {(!currentUser || currentUser.role === 'admin') && (
+          {/* Orders & Tables Tab */}
+          <button
+            onClick={() => handleSelectTab('orders')}
+            title="Comandas & Mesas"
+            className={navItemClass('orders')}
+          >
+            <div className="flex items-center gap-2.5">
+              <span className={`material-symbols-outlined text-xl ${activeTab === 'orders' ? 'filled text-white' : 'text-slate-400'}`}>
+                table_restaurant
+              </span>
+              {isExpanded && <span>Comandas & Mesas</span>}
+            </div>
+          </button>
+
+          {/* Checkout Tab (Only for Admin and Cajero) */}
+          {(!currentUser || currentUser.role === 'admin' || currentUser.role === 'cajero') && (
             <button
               onClick={() => handleSelectTab('checkout')}
-              title="Caja & Facturación POS"
+              title="Cobro POS & Facturación"
               className={navItemClass('checkout')}
             >
               <div className="flex items-center gap-2.5">
                 <span className={`material-symbols-outlined text-xl ${activeTab === 'checkout' ? 'filled text-white' : 'text-slate-400'}`}>
-                  point_of_sale
+                  payments
                 </span>
-                {isExpanded && <span>Caja & Cobro POS</span>}
+                {isExpanded && <span>Cobro Manual POS</span>}
               </div>
             </button>
           )}

@@ -294,5 +294,6 @@ INSERT INTO public.recipe_ingredients (recipe_id, inventory_item_id, inventory_i
 INSERT INTO public.profiles (username, email, password_hash, full_name, role, phone) VALUES
 ('admin', 'admin@maxipollos.com', 'admin123', 'Administrador General', 'admin', '3001234567'),
 ('carlos', 'carlos@maxipollos.com', 'mesero123', 'Carlos Ramírez', 'mesero', '3123456789'),
-('laura', 'laura@maxipollos.com', 'mesero123', 'Laura Castro', 'mesero', '3142223344')
+('laura', 'laura@maxipollos.com', 'mesero123', 'Laura Castro', 'mesero', '3142223344'),
+('caja', 'caja@maxipollos.com', 'caja123', 'Caja Principal (PC)', 'cajero', '3000000000')
 ON CONFLICT (username) DO NOTHING;

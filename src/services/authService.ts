@@ -31,6 +31,15 @@ const DEFAULT_USERS: Array<AuthUser & { password: string }> = [
     role: 'mesero',
     phone: '3142223344',
     password: 'mesero123'
+  },
+  {
+    id: 'user-caja',
+    username: 'caja',
+    email: 'caja@maxipollos.com',
+    fullName: 'Caja Principal (PC)',
+    role: 'cajero',
+    phone: '3000000000',
+    password: 'caja123'
   }
 ];
 

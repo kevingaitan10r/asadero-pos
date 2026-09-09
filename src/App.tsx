@@ -40,6 +40,7 @@ import { TopAppBar } from './components/TopAppBar';
 import { MenuView } from './components/MenuView';
 import { BillSidebar } from './components/BillSidebar';
 import { CheckoutView } from './components/CheckoutView';
+import { CashierStationView } from './components/CashierStationView';
 import { TablesAndOrdersView } from './components/TablesAndOrdersView';
 import { DashboardView } from './components/DashboardView';
 import { InventoryView } from './components/InventoryView';
@@ -121,12 +122,26 @@ export default function App() {
   };
 
   // Navigation State
-  const [activeTab, setActiveTab] = useState<ActiveTab>('menu');
+  const [activeTab, setActiveTab] = useState<ActiveTab>(() => {
+    const user = authService.getCurrentUser();
+    if (user?.role === 'cajero') return 'cashier';
+    return 'menu';
+  });
 
   // Enforce role permission whenever activeTab or currentUser changes
   React.useEffect(() => {
-    if (currentUser && currentUser.role !== 'admin' && activeTab !== 'menu') {
-      setActiveTab('menu');
+    if (currentUser) {
+      if (currentUser.role === 'mesero') {
+        const allowedWaiterTabs: ActiveTab[] = ['menu', 'orders'];
+        if (!allowedWaiterTabs.includes(activeTab)) {
+          setActiveTab('menu');
+        }
+      } else if (currentUser.role === 'cajero') {
+        const allowedCajeroTabs: ActiveTab[] = ['cashier', 'menu', 'orders', 'checkout'];
+        if (!allowedCajeroTabs.includes(activeTab)) {
+          setActiveTab('cashier');
+        }
+      }
     }
   }, [currentUser, activeTab]);
 
@@ -189,6 +204,12 @@ export default function App() {
   // Cart items in COP (Starts empty, appears dynamically upon selection)
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [isSidebarDismissed, setIsSidebarDismissed] = useState<boolean>(false);
+  const [orderSentToast, setOrderSentToast] = useState<{
+    show: boolean;
+    orderNumber: number;
+    tableName: string;
+    total: number;
+  } | null>(null);
 
   // Modals state
   const [customizingItem, setCustomizingItem] = useState<MenuItem | null>(null);
@@ -487,11 +508,86 @@ export default function App() {
     setActiveTab('menu');
   };
 
+  // Enviar Pedido a Caja desde el celular del mesero (o guardar comanda pendiente)
+  const handleSendOrderToCashier = async () => {
+    if (cartItems.length === 0) return;
+
+    const subtotal = cartItems.reduce(
+      (sum, item) => sum + item.totalUnitPrice * item.quantity,
+      0
+    );
+    const discountAmount = (subtotal * discountPercent) / 100;
+    const taxableAmount = Math.max(0, subtotal - discountAmount);
+    const tax = taxableAmount * 0.19;
+    const total = taxableAmount + tax;
+
+    const currentServerName = currentUser?.fullName || currentUser?.username || 'Mesero';
+    const targetCustomerName = selectedCustomer || (orderType === 'takeout' ? 'Para Llevar' : selectedTable ? `Mesa ${selectedTable}` : 'Salón General');
+
+    const newOrder: Order = {
+      id: `ORD-${orderNumber}-${Date.now()}`,
+      orderNumber,
+      tableName: selectedTable,
+      customerId: selectedCustomerId,
+      customerName: targetCustomerName,
+      type: orderType,
+      items: [...cartItems],
+      subtotal,
+      tax,
+      discount: discountAmount,
+      tip: 0,
+      total,
+      status: 'pending',
+      createdAt: new Date().toISOString(),
+      serverName: currentServerName,
+      deliveryAddress,
+      deliveryPhone,
+      deliveryNotes
+    };
+
+    setOrders((prev) => [newOrder, ...prev]);
+    dataService.saveOrder(newOrder);
+
+    // Reset current active cart on mobile/tablet
+    setCartItems([]);
+    setDiscountPercent(0);
+    setOrderNote('');
+    setSelectedTable('');
+    setSelectedCustomer('');
+    setSelectedCustomerId(undefined);
+    setIsMobileCartOpen(false);
+    setOrderNumber((prev) => prev + 1);
+
+    // Toast notification
+    setOrderSentToast({
+      show: true,
+      orderNumber: newOrder.orderNumber,
+      tableName: newOrder.tableName || newOrder.customerName || 'Salón',
+      total
+    });
+    setTimeout(() => {
+      setOrderSentToast(null);
+    }, 4500);
+  };
+
+  // Cargar comanda seleccionada en la Terminal de Caja para cobrar
+  const handleChargeOrderFromCashier = (order: Order) => {
+    setCartItems([...order.items]);
+    setOrderNumber(order.orderNumber);
+    setOrderType(order.type);
+    setSelectedTable(order.tableName || '');
+    setSelectedCustomer(order.customerName || '');
+    if (order.deliveryAddress) setDeliveryAddress(order.deliveryAddress);
+    if (order.deliveryPhone) setDeliveryPhone(order.deliveryPhone);
+    if (order.deliveryNotes) setDeliveryNotes(order.deliveryNotes);
+    setActiveTab('checkout');
+  };
+
   // Finish Order / Checkout
   const handleFinishOrder = (orderData: Partial<Order>) => {
     const pointsEarned = Math.floor((orderData.total || 0) / 1000);
 
-    const currentServerName = currentUser?.fullName || currentUser?.username || 'Carlos';
+    const currentServerName = currentUser?.fullName || currentUser?.username || 'Cajero';
 
     const finalOrder: Order = {
       id: 'ORD-' + orderNumber,
@@ -518,7 +614,16 @@ export default function App() {
       deliveryNotes: orderData.deliveryNotes || deliveryNotes
     };
 
-    setOrders([finalOrder, ...orders]);
+    // Si ya existía como pendiente, se actualiza; si es venta nueva directa, se añade
+    setOrders((prevOrders) => {
+      const exists = prevOrders.some((o) => o.orderNumber === orderNumber);
+      if (exists) {
+        return prevOrders.map((o) => (o.orderNumber === orderNumber ? finalOrder : o));
+      }
+      return [finalOrder, ...prevOrders];
+    });
+
+    dataService.updateOrderStatus(orderNumber, 'completed', finalOrder);
 
     // Update customer CRM points if customer exists
     if (selectedCustomerId) {
@@ -623,6 +728,9 @@ export default function App() {
     }
 
     setReceiptOrder(finalOrder);
+    if (currentUser?.role === 'cajero') {
+      setActiveTab('cashier');
+    }
   };
 
   const handleDispatchDeliveryDirectly = () => {
@@ -691,6 +799,10 @@ export default function App() {
           setCurrentUser(user);
           if (user.role === 'admin') {
             setIsAdminUnlocked(true);
+            setActiveTab('menu');
+          } else if (user.role === 'cajero') {
+            setIsAdminUnlocked(false);
+            setActiveTab('cashier');
           } else {
             setIsAdminUnlocked(false);
             setActiveTab('menu');
@@ -797,6 +909,8 @@ export default function App() {
                   onOpenDeliveryModal={() => setIsDeliveryModalOpen(true)}
                   onDismiss={() => setIsSidebarDismissed(true)}
                   onDispatchDelivery={handleDispatchDeliveryDirectly}
+                  userRole={currentUser?.role}
+                  onSendOrderToCashier={handleSendOrderToCashier}
                 />
               )}
 
@@ -816,6 +930,15 @@ export default function App() {
                 </div>
               )}
             </>
+          )}
+
+          {activeTab === 'cashier' && (
+            <CashierStationView
+              orders={orders}
+              onChargeOrder={handleChargeOrderFromCashier}
+              onNewDirectSale={() => setActiveTab('menu')}
+              serverName={currentUser?.fullName || 'Caja Principal'}
+            />
           )}
 
           {activeTab === 'orders' && (
@@ -991,6 +1114,25 @@ export default function App() {
         correctPin={companySettings.adminPin || '1234'}
         targetModuleName={targetErpTab?.title || 'Suite ERP'}
       />
+
+      {/* 5. Notification Toast: Order Sent to Cashier */}
+      {orderSentToast && (
+        <div className="fixed top-5 left-1/2 -translate-x-1/2 z-50 animate-in slide-in-from-top-4 duration-200 pointer-events-none">
+          <div className="bg-slate-950 text-white px-5 py-3.5 rounded-2xl shadow-2xl border border-emerald-500/30 flex items-center gap-3 backdrop-blur-md">
+            <span className="w-8 h-8 rounded-full bg-emerald-500 text-white flex items-center justify-center text-base font-black shrink-0 shadow-md">
+              ✓
+            </span>
+            <div>
+              <p className="text-xs sm:text-sm font-black text-white">
+                ¡Pedido #{orderSentToast.orderNumber} enviado a Caja con éxito!
+              </p>
+              <p className="text-[11px] text-slate-300 font-semibold">
+                {orderSentToast.tableName} • {formatCOP(orderSentToast.total)}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

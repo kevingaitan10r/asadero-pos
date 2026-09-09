@@ -27,6 +27,8 @@ interface BillSidebarProps {
   onOpenDeliveryModal?: () => void;
   onDismiss?: () => void;
   onDispatchDelivery?: () => void;
+  userRole?: 'admin' | 'mesero' | 'cajero' | 'parrillero';
+  onSendOrderToCashier?: () => void;
 }
 
 export const BillSidebar: React.FC<BillSidebarProps> = ({
@@ -53,7 +55,9 @@ export const BillSidebar: React.FC<BillSidebarProps> = ({
   deliveryNotes,
   onOpenDeliveryModal,
   onDismiss,
-  onDispatchDelivery
+  onDispatchDelivery,
+  userRole,
+  onSendOrderToCashier
 }) => {
   const [showNoteModal, setShowNoteModal] = useState(false);
   const [tempNote, setTempNote] = useState(orderNote);
@@ -375,33 +379,69 @@ export const BillSidebar: React.FC<BillSidebarProps> = ({
             </button>
           </div>
 
-          {/* Primary Checkout / Pay Button */}
-          <button
-            id="btn-pay-now"
-            disabled={items.length === 0}
-            onClick={handleProceedPayAndCloseMobile}
-            className={`w-full h-12 font-black text-sm sm:text-base rounded-xl shadow-lg flex items-center justify-center gap-2 transition-all cursor-pointer active:scale-98 ${
-              items.length > 0
-                ? orderType === 'delivery'
-                  ? 'bg-amber-500 hover:bg-amber-600 text-amber-950 font-black shadow-amber-500/20'
-                  : 'bg-red-600 hover:bg-red-700 text-white shadow-red-600/20'
-                : 'bg-slate-300 dark:bg-slate-800 text-slate-500 dark:text-slate-500 cursor-not-allowed shadow-none'
-            }`}
-          >
-            {orderType === 'delivery' ? (
-              <>
-                <span className="material-symbols-outlined text-xl">two_wheeler</span>
-                <span>Despachar Domicilio • {formatCOP(total)}</span>
-              </>
-            ) : (
-              <>
-                <span className="material-symbols-outlined text-xl">payments</span>
-                <span>Cobrar {formatCOP(total)}</span>
-              </>
-            )}
-          </button>
+          {/* Primary Action Button */}
+          {userRole === 'mesero' ? (
+            <button
+              id="btn-send-to-cashier"
+              disabled={items.length === 0}
+              onClick={() => {
+                if (onSendOrderToCashier) onSendOrderToCashier();
+                if (onCloseMobileCart) onCloseMobileCart();
+              }}
+              className={`w-full h-12 font-black text-sm sm:text-base rounded-xl shadow-lg flex items-center justify-center gap-2 transition-all cursor-pointer active:scale-98 ${
+                items.length > 0
+                  ? 'bg-red-600 hover:bg-red-700 text-white shadow-red-600/20'
+                  : 'bg-slate-300 dark:bg-slate-800 text-slate-500 cursor-not-allowed shadow-none'
+              }`}
+            >
+              <span className="material-symbols-outlined text-xl">send</span>
+              <span>Enviar Pedido a Caja • {formatCOP(total)}</span>
+            </button>
+          ) : (
+            <div className="space-y-2">
+              <button
+                id="btn-pay-now"
+                disabled={items.length === 0}
+                onClick={handleProceedPayAndCloseMobile}
+                className={`w-full h-12 font-black text-sm sm:text-base rounded-xl shadow-lg flex items-center justify-center gap-2 transition-all cursor-pointer active:scale-98 ${
+                  items.length > 0
+                    ? orderType === 'delivery'
+                      ? 'bg-amber-500 hover:bg-amber-600 text-amber-950 font-black shadow-amber-500/20'
+                      : 'bg-red-600 hover:bg-red-700 text-white shadow-red-600/20'
+                    : 'bg-slate-300 dark:bg-slate-800 text-slate-500 dark:text-slate-500 cursor-not-allowed shadow-none'
+                }`}
+              >
+                {orderType === 'delivery' ? (
+                  <>
+                    <span className="material-symbols-outlined text-xl">two_wheeler</span>
+                    <span>Despachar Domicilio • {formatCOP(total)}</span>
+                  </>
+                ) : (
+                  <>
+                    <span className="material-symbols-outlined text-xl">payments</span>
+                    <span>Cobrar {formatCOP(total)}</span>
+                  </>
+                )}
+              </button>
+
+              {onSendOrderToCashier && items.length > 0 && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    onSendOrderToCashier();
+                    if (onCloseMobileCart) onCloseMobileCart();
+                  }}
+                  className="w-full py-2 rounded-xl border border-border-subtle bg-surface hover:bg-surface-hover text-slate-700 dark:text-slate-300 font-bold text-xs flex items-center justify-center gap-1.5 transition-all cursor-pointer"
+                >
+                  <span className="material-symbols-outlined text-sm text-amber-500">send</span>
+                  <span>Mandar Comanda a Cocina / Dejar Pendiente</span>
+                </button>
+              )}
+            </div>
+          )}
+
           {orderType === 'delivery' && (
-            <p className="text-[11px] text-center text-slate-500 dark:text-slate-400 font-medium">
+            <p className="text-[11px] text-center text-slate-500 dark:text-slate-400 font-medium mt-2">
               * Pago contra entrega • El domiciliario cobra al entregar
             </p>
           )}

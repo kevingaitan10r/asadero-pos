@@ -101,6 +101,7 @@ export interface Table {
 // --- ACTIVE TABS FOR POS + ERP INTEGRAL ---
 export type ActiveTab =
   | 'menu'
+  | 'cashier'
   | 'orders'
   | 'checkout'
   | 'inventory'

@@ -272,7 +272,15 @@ INSERT INTO public.recipes (id, menu_item_id, menu_item_name, yield_servings, pr
 ('rec-102-broster-quarter', 'cuarto-pollo-broster', '1/4 Pollo Broster', 1, 'Descuenta exactamente 0.25 pollos broster.'),
 ('rec-102-broster-half', 'medio-pollo-broster', '1/2 Pollo Broster', 1, 'Descuenta exactamente 0.50 pollos broster.'),
 ('rec-102-broster', 'pollo-broster', 'Pollo Broster (Entero)', 1, 'Descuenta 1.00 pollo broster entero.')
-ON CONFLICT (id) DO NOTHING;
+ON CONFLICT (id) DO UPDATE SET 
+  menu_item_id = EXCLUDED.menu_item_id,
+  menu_item_name = EXCLUDED.menu_item_name;
+
+-- Limpiar e insertar ingredientes para evitar duplicados en re-ejecución
+DELETE FROM public.recipe_ingredients WHERE recipe_id IN (
+  'rec-101-quarter', 'rec-101-half', 'rec-101', 
+  'rec-102-broster-quarter', 'rec-102-broster-half', 'rec-102-broster'
+);
 
 INSERT INTO public.recipe_ingredients (recipe_id, inventory_item_id, inventory_item_name, quantity_needed, unit, unit_cost) VALUES
 ('rec-101-quarter', 'inv-1', 'Pollo Entero Fresco (Marinado)', 0.250, 'pollos', 24000),
@@ -280,8 +288,7 @@ INSERT INTO public.recipe_ingredients (recipe_id, inventory_item_id, inventory_i
 ('rec-101', 'inv-1', 'Pollo Entero Fresco (Marinado)', 1.000, 'pollos', 24000),
 ('rec-102-broster-quarter', 'inv-1', 'Pollo Entero Fresco (Marinado)', 0.250, 'pollos', 24000),
 ('rec-102-broster-half', 'inv-1', 'Pollo Entero Fresco (Marinado)', 0.500, 'pollos', 24000),
-('rec-102-broster', 'inv-1', 'Pollo Entero Fresco (Marinado)', 1.000, 'pollos', 24000)
-ON CONFLICT (id) DO NOTHING;
+('rec-102-broster', 'inv-1', 'Pollo Entero Fresco (Marinado)', 1.000, 'pollos', 24000);
 
 -- 5. Perfiles de usuario por defecto
 INSERT INTO public.profiles (username, email, password_hash, full_name, role, phone) VALUES

@@ -191,25 +191,6 @@ export const NavigationDrawer: React.FC<NavigationDrawerProps> = ({
             )}
           </button>
 
-          {/* Orders / Kitchen Tab */}
-          <button
-            onClick={() => handleSelectTab('orders')}
-            title="Comandas & Cocina KDS"
-            className={navItemClass('orders')}
-          >
-            <div className="flex items-center gap-2.5">
-              <span className={`material-symbols-outlined text-xl ${activeTab === 'orders' ? 'filled text-white' : 'text-slate-400'}`}>
-                soup_kitchen
-              </span>
-              {isExpanded && <span>Cocina & Comandas</span>}
-            </div>
-            {pendingOrdersCount > 0 && (
-              <span className="px-2 py-0.5 text-xs font-black bg-emerald-500 text-white rounded-full">
-                {pendingOrdersCount}
-              </span>
-            )}
-          </button>
-
           {/* Checkout Tab */}
           <button
             onClick={() => handleSelectTab('checkout')}
@@ -221,20 +202,6 @@ export const NavigationDrawer: React.FC<NavigationDrawerProps> = ({
                 point_of_sale
               </span>
               {isExpanded && <span>Caja & Cobro POS</span>}
-            </div>
-          </button>
-
-          {/* CRM Clientes & Domicilios (POS Access) */}
-          <button
-            onClick={() => handleSelectTab('crm')}
-            title="Clientes CRM & Fidelización"
-            className={navItemClass('crm')}
-          >
-            <div className="flex items-center gap-2.5">
-              <span className={`material-symbols-outlined text-xl ${activeTab === 'crm' ? 'filled text-white' : 'text-slate-400'}`}>
-                diversity_3
-              </span>
-              {isExpanded && <span>Clientes & Puntos</span>}
             </div>
           </button>
 

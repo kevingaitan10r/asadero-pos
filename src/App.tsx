@@ -567,6 +567,38 @@ export default function App() {
     setReceiptOrder(finalOrder);
   };
 
+  const handleDispatchDeliveryDirectly = () => {
+    const subtotal = cartItems.reduce(
+      (sum, item) => sum + item.totalUnitPrice * item.quantity,
+      0
+    );
+    const discountAmount = (subtotal * discountPercent) / 100;
+    const taxableAmount = Math.max(0, subtotal - discountAmount);
+    const tax = taxableAmount * 0.19;
+    const total = taxableAmount + tax;
+
+    handleFinishOrder({
+      orderNumber,
+      tableName: 'Domicilio',
+      customerName: selectedCustomer || 'Cliente Domicilio',
+      type: 'delivery',
+      items: cartItems,
+      subtotal: taxableAmount,
+      tax,
+      discount: discountAmount,
+      tip: 0,
+      total,
+      paymentMethod: 'contra_entrega',
+      paidAmount: total,
+      change: 0,
+      status: 'completed',
+      createdAt: new Date().toISOString(),
+      deliveryAddress,
+      deliveryPhone,
+      deliveryNotes
+    });
+  };
+
   const handleStartNewOrder = () => {
     setOrderNumber((prev) => prev + 1);
     setCartItems([]);
@@ -678,6 +710,7 @@ export default function App() {
                   deliveryNotes={deliveryNotes}
                   onOpenDeliveryModal={() => setIsDeliveryModalOpen(true)}
                   onDismiss={() => setIsSidebarDismissed(true)}
+                  onDispatchDelivery={handleDispatchDeliveryDirectly}
                 />
               )}
 

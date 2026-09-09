@@ -26,6 +26,7 @@ interface BillSidebarProps {
   deliveryNotes?: string;
   onOpenDeliveryModal?: () => void;
   onDismiss?: () => void;
+  onDispatchDelivery?: () => void;
 }
 
 export const BillSidebar: React.FC<BillSidebarProps> = ({
@@ -51,7 +52,8 @@ export const BillSidebar: React.FC<BillSidebarProps> = ({
   deliveryPhone,
   deliveryNotes,
   onOpenDeliveryModal,
-  onDismiss
+  onDismiss,
+  onDispatchDelivery
 }) => {
   const [showNoteModal, setShowNoteModal] = useState(false);
   const [tempNote, setTempNote] = useState(orderNote);
@@ -73,9 +75,16 @@ export const BillSidebar: React.FC<BillSidebarProps> = ({
   };
 
   const handleProceedPayAndCloseMobile = () => {
-    if (orderType === 'delivery' && !deliveryAddress?.trim() && onOpenDeliveryModal) {
-      onOpenDeliveryModal();
-      return;
+    if (orderType === 'delivery') {
+      if (!deliveryAddress?.trim() && onOpenDeliveryModal) {
+        onOpenDeliveryModal();
+        return;
+      }
+      if (onDispatchDelivery) {
+        onDispatchDelivery();
+        if (onCloseMobileCart) onCloseMobileCart();
+        return;
+      }
     }
     onProceedToPay();
     if (onCloseMobileCart) onCloseMobileCart();
@@ -371,15 +380,31 @@ export const BillSidebar: React.FC<BillSidebarProps> = ({
             id="btn-pay-now"
             disabled={items.length === 0}
             onClick={handleProceedPayAndCloseMobile}
-            className={`w-full h-12 font-black text-base rounded-xl shadow-lg flex items-center justify-center gap-2 transition-all cursor-pointer active:scale-98 ${
+            className={`w-full h-12 font-black text-sm sm:text-base rounded-xl shadow-lg flex items-center justify-center gap-2 transition-all cursor-pointer active:scale-98 ${
               items.length > 0
-                ? 'bg-red-600 hover:bg-red-700 text-white'
+                ? orderType === 'delivery'
+                  ? 'bg-amber-500 hover:bg-amber-600 text-amber-950 font-black shadow-amber-500/20'
+                  : 'bg-red-600 hover:bg-red-700 text-white shadow-red-600/20'
                 : 'bg-slate-300 dark:bg-slate-800 text-slate-500 dark:text-slate-500 cursor-not-allowed shadow-none'
             }`}
           >
-            <span className="material-symbols-outlined text-xl">payments</span>
-            <span>Cobrar {formatCOP(total)}</span>
+            {orderType === 'delivery' ? (
+              <>
+                <span className="material-symbols-outlined text-xl">two_wheeler</span>
+                <span>Despachar Domicilio • {formatCOP(total)}</span>
+              </>
+            ) : (
+              <>
+                <span className="material-symbols-outlined text-xl">payments</span>
+                <span>Cobrar {formatCOP(total)}</span>
+              </>
+            )}
           </button>
+          {orderType === 'delivery' && (
+            <p className="text-[11px] text-center text-slate-500 dark:text-slate-400 font-medium">
+              * Pago contra entrega • El domiciliario cobra al entregar
+            </p>
+          )}
         </div>
 
         {/* Note Modal */}

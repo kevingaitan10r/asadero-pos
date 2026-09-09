@@ -250,7 +250,9 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({
                   <div className="flex justify-between">
                     <span>FORMA DE PAGO:</span>
                     <span className="font-bold uppercase">
-                      {order.paymentMethod === 'cash'
+                      {order.paymentMethod === 'contra_entrega' || isDelivery
+                        ? 'CONTRA ENTREGA (RECIBE DOMICILIARIO)'
+                        : order.paymentMethod === 'cash'
                         ? 'EFECTIVO'
                         : order.paymentMethod === 'card'
                         ? 'DATÁFONO / TARJETA'
@@ -389,7 +391,13 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({
                   <div className="flex justify-between pt-1">
                     <span>MÉTODO DE PAGO:</span>
                     <span className="font-bold uppercase text-slate-900">
-                      {order.paymentMethod === 'cash' ? 'EFECTIVO' : order.paymentMethod === 'card' ? 'DATÁFONO' : 'TRANSFERENCIA'}
+                      {order.paymentMethod === 'contra_entrega' || isDelivery
+                        ? 'CONTRA ENTREGA (RECIBE DOMICILIARIO)'
+                        : order.paymentMethod === 'cash'
+                        ? 'EFECTIVO'
+                        : order.paymentMethod === 'card'
+                        ? 'DATÁFONO'
+                        : 'TRANSFERENCIA'}
                     </span>
                   </div>
                 </div>

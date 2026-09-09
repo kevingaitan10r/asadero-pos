@@ -72,7 +72,7 @@ export interface Order {
   total: number;
   status: OrderStatus;
   createdAt: string;
-  paymentMethod?: 'cash' | 'card' | 'transfer';
+  paymentMethod?: 'cash' | 'card' | 'transfer' | 'contra_entrega';
   paidAmount?: number;
   change?: number;
   serverName?: string;

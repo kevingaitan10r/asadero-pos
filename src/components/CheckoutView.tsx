@@ -107,7 +107,12 @@ export const CheckoutView: React.FC<CheckoutViewProps> = ({
       return;
     }
 
-    const paidAmt = paymentMethod === 'cash' && tenderedNumeric > 0 ? tenderedNumeric : total;
+    const paidAmt =
+      orderType === 'delivery'
+        ? total
+        : paymentMethod === 'cash' && tenderedNumeric > 0
+        ? tenderedNumeric
+        : total;
 
     onFinishOrder({
       orderNumber,
@@ -120,9 +125,9 @@ export const CheckoutView: React.FC<CheckoutViewProps> = ({
       discount: discountAmount,
       tip: tipAmount,
       total,
-      paymentMethod,
+      paymentMethod: orderType === 'delivery' ? 'contra_entrega' : paymentMethod,
       paidAmount: paidAmt,
-      change: paymentMethod === 'cash' ? change : 0,
+      change: orderType === 'delivery' ? 0 : paymentMethod === 'cash' ? change : 0,
       status: 'completed',
       createdAt: new Date().toISOString(),
       deliveryAddress,
@@ -471,10 +476,20 @@ export const CheckoutView: React.FC<CheckoutViewProps> = ({
               <button
                 id="btn-complete-checkout"
                 onClick={handleCompleteOrder}
-                className="w-full h-14 sm:h-16 bg-red-600 hover:bg-red-700 text-white font-black text-base sm:text-lg rounded-2xl shadow-md flex items-center justify-center gap-3 transition-all cursor-pointer active:scale-98"
+                className={`w-full h-14 sm:h-16 font-black text-base sm:text-lg rounded-2xl shadow-md flex items-center justify-center gap-3 transition-all cursor-pointer active:scale-98 ${
+                  orderType === 'delivery'
+                    ? 'bg-amber-500 hover:bg-amber-600 text-amber-950 shadow-amber-500/20'
+                    : 'bg-red-600 hover:bg-red-700 text-white'
+                }`}
               >
-                <span className="material-symbols-outlined text-2xl">check_circle</span>
-                <span>Completar Pago ({formatCOP(total)})</span>
+                <span className="material-symbols-outlined text-2xl">
+                  {orderType === 'delivery' ? 'two_wheeler' : 'check_circle'}
+                </span>
+                <span>
+                  {orderType === 'delivery'
+                    ? `Despachar Domicilio • ${formatCOP(total)} (Contra Entrega)`
+                    : `Completar Pago (${formatCOP(total)})`}
+                </span>
               </button>
             </div>
           </div>

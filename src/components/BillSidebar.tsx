@@ -25,6 +25,7 @@ interface BillSidebarProps {
   deliveryPhone?: string;
   deliveryNotes?: string;
   onOpenDeliveryModal?: () => void;
+  onDismiss?: () => void;
 }
 
 export const BillSidebar: React.FC<BillSidebarProps> = ({
@@ -49,7 +50,8 @@ export const BillSidebar: React.FC<BillSidebarProps> = ({
   deliveryAddress,
   deliveryPhone,
   deliveryNotes,
-  onOpenDeliveryModal
+  onOpenDeliveryModal,
+  onDismiss
 }) => {
   const [showNoteModal, setShowNoteModal] = useState(false);
   const [tempNote, setTempNote] = useState(orderNote);
@@ -98,7 +100,7 @@ export const BillSidebar: React.FC<BillSidebarProps> = ({
 
       <aside
         id="bill-sidebar"
-        className={`fixed lg:relative top-0 bottom-0 right-0 z-50 lg:z-20 w-full sm:w-[350px] lg:w-[330px] xl:w-[360px] bg-surface border-l border-border-subtle flex flex-col h-full shrink-0 shadow-2xl lg:shadow-none select-none drawer-transition ${
+        className={`fixed lg:relative top-0 bottom-0 right-0 z-50 lg:z-20 w-full sm:w-[350px] lg:w-[330px] xl:w-[360px] bg-surface border-l border-border-subtle flex flex-col h-full shrink-0 shadow-2xl lg:shadow-none select-none drawer-transition animate-in slide-in-from-right-5 duration-200 ${
           isOpenMobileCart ? 'translate-x-0' : 'translate-x-full lg:translate-x-0'
         }`}
       >
@@ -112,6 +114,15 @@ export const BillSidebar: React.FC<BillSidebarProps> = ({
                   className="lg:hidden p-1 rounded-lg bg-surface-elevated text-slate-500 hover:text-slate-900 dark:hover:text-white"
                 >
                   <span className="material-symbols-outlined text-lg">close</span>
+                </button>
+              )}
+              {onDismiss && (
+                <button
+                  onClick={onDismiss}
+                  className="hidden lg:flex p-1 rounded-lg bg-surface-elevated text-slate-400 hover:text-slate-700 dark:hover:text-white transition-colors cursor-pointer"
+                  title="Minimizar comanda"
+                >
+                  <span className="material-symbols-outlined text-base">chevron_right</span>
                 </button>
               )}
               <h2 className="text-base sm:text-lg font-black text-slate-900 dark:text-white tracking-tight">

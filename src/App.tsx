@@ -139,51 +139,9 @@ export default function App() {
   const [deliveryNotes, setDeliveryNotes] = useState<string>('');
   const [isDeliveryModalOpen, setIsDeliveryModalOpen] = useState<boolean>(false);
 
-  // Initial cart items in COP
-  const [cartItems, setCartItems] = useState<CartItem[]>([
-    {
-      id: 'cart-1',
-      menuItemId: 'pollo-frito',
-      name: 'Pollo Frito',
-      basePrice: 35000,
-      totalUnitPrice: 35000,
-      quantity: 1,
-      image:
-        'https://images.unsplash.com/photo-1626082927389-6cd097cdc6ec?w=600&auto=format&fit=crop&q=80',
-      notes: 'Bien dorado',
-      selectedModifiers: [
-        {
-          groupId: 'sauces',
-          groupName: 'Salsas',
-          optionId: 'aji-casero',
-          name: 'Ají Casero Asadero',
-          price: 0
-        }
-      ]
-    },
-    {
-      id: 'cart-2',
-      menuItemId: 'yuca-frita',
-      name: 'Yuca Frita',
-      basePrice: 5000,
-      totalUnitPrice: 5000,
-      quantity: 1,
-      image:
-        'https://images.unsplash.com/photo-1541592106381-b31e9677c0e5?w=600&auto=format&fit=crop&q=80',
-      selectedModifiers: []
-    },
-    {
-      id: 'cart-3',
-      menuItemId: 'gaseosa-15',
-      name: 'Gaseosa 1.5 L',
-      basePrice: 7000,
-      totalUnitPrice: 7000,
-      quantity: 1,
-      image:
-        'https://images.unsplash.com/photo-1622483767028-3f66f32aef97?w=600&auto=format&fit=crop&q=80',
-      selectedModifiers: []
-    }
-  ]);
+  // Cart items in COP (Starts empty, appears dynamically upon selection)
+  const [cartItems, setCartItems] = useState<CartItem[]>([]);
+  const [isSidebarDismissed, setIsSidebarDismissed] = useState<boolean>(false);
 
   // Modals state
   const [customizingItem, setCustomizingItem] = useState<MenuItem | null>(null);
@@ -193,6 +151,7 @@ export default function App() {
 
   // Cart operations — Direct agile 1-click addition
   const handleSelectItem = (item: MenuItem) => {
+    setIsSidebarDismissed(false);
     const existing = cartItems.find(
       (ci) => ci.menuItemId === item.id && ci.selectedModifiers.length === 0
     );
@@ -230,6 +189,7 @@ export default function App() {
     modifiers: CartItemModifier[],
     notes: string
   ) => {
+    setIsSidebarDismissed(false);
     const modifiersTotal = modifiers.reduce((acc, m) => acc + m.price, 0);
     const unitPrice = item.price + modifiersTotal;
 
@@ -693,30 +653,49 @@ export default function App() {
                 searchQuery={searchQuery}
               />
 
-              <BillSidebar
-                orderNumber={orderNumber}
-                orderType={orderType}
-                onOrderTypeChange={setOrderType}
-                tableName={selectedTable}
-                customerName={selectedCustomer}
-                onSelectTable={() => setActiveTab('orders')}
-                items={cartItems}
-                onUpdateQuantity={handleUpdateQuantity}
-                onRemoveItem={handleRemoveItem}
-                onEditItem={handleEditItem}
-                onProceedToPay={() => setActiveTab('checkout')}
-                discountPercent={discountPercent}
-                onApplyDiscount={setDiscountPercent}
-                orderNote={orderNote}
-                onSetOrderNote={setOrderNote}
-                onClearCart={handleClearCart}
-                isOpenMobileCart={isMobileCartOpen}
-                onCloseMobileCart={() => setIsMobileCartOpen(false)}
-                deliveryAddress={deliveryAddress}
-                deliveryPhone={deliveryPhone}
-                deliveryNotes={deliveryNotes}
-                onOpenDeliveryModal={() => setIsDeliveryModalOpen(true)}
-              />
+              {cartItems.length > 0 && !isSidebarDismissed && (
+                <BillSidebar
+                  orderNumber={orderNumber}
+                  orderType={orderType}
+                  onOrderTypeChange={setOrderType}
+                  tableName={selectedTable}
+                  customerName={selectedCustomer}
+                  onSelectTable={() => setActiveTab('orders')}
+                  items={cartItems}
+                  onUpdateQuantity={handleUpdateQuantity}
+                  onRemoveItem={handleRemoveItem}
+                  onEditItem={handleEditItem}
+                  onProceedToPay={() => setActiveTab('checkout')}
+                  discountPercent={discountPercent}
+                  onApplyDiscount={setDiscountPercent}
+                  orderNote={orderNote}
+                  onSetOrderNote={setOrderNote}
+                  onClearCart={handleClearCart}
+                  isOpenMobileCart={isMobileCartOpen}
+                  onCloseMobileCart={() => setIsMobileCartOpen(false)}
+                  deliveryAddress={deliveryAddress}
+                  deliveryPhone={deliveryPhone}
+                  deliveryNotes={deliveryNotes}
+                  onOpenDeliveryModal={() => setIsDeliveryModalOpen(true)}
+                  onDismiss={() => setIsSidebarDismissed(true)}
+                />
+              )}
+
+              {/* Floating button when desktop user minimized order sidebar */}
+              {cartItems.length > 0 && isSidebarDismissed && (
+                <div className="hidden lg:block fixed bottom-6 right-6 z-30 animate-in slide-in-from-bottom-3 duration-200">
+                  <button
+                    onClick={() => setIsSidebarDismissed(false)}
+                    className="h-12 px-5 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-2xl shadow-xl flex items-center gap-3 font-black text-xs hover:scale-105 active:scale-95 transition-all cursor-pointer border border-border-subtle"
+                  >
+                    <span className="w-6 h-6 rounded-full bg-amber-400 text-amber-950 font-black flex items-center justify-center text-xs shadow-xs">
+                      {cartTotalCount}
+                    </span>
+                    <span>Ver Orden ({formatCOP(cartTotalAmount * 1.19)})</span>
+                    <span className="material-symbols-outlined text-sm">receipt_long</span>
+                  </button>
+                </div>
+              )}
             </>
           )}
 

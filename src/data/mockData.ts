@@ -842,7 +842,7 @@ export const INITIAL_INVENTORY_ITEMS: InventoryItem[] = [
     name: 'Pollo Entero Fresco (Marinado)',
     category: 'carnes',
     stockQuantity: 18,
-    unit: 'unidades',
+    unit: 'pollos',
     minStockThreshold: 30,
     costPerUnit: 24000,
     supplier: 'Avícola San Pedro S.A.S.',
@@ -1085,31 +1085,24 @@ export const INITIAL_PURCHASE_ORDERS: PurchaseOrder[] = [
 export const INITIAL_RECIPES: Recipe[] = [
   {
     id: 'rec-101',
-    menuItemId: 'pollo-entero',
-    menuItemName: 'Pollo Entero',
+    menuItemId: 'pollo-frito',
+    menuItemName: 'Pollo Frito (Entero)',
     yieldServings: 1,
-    preparationNotes: 'Pollo marinado al carbón. Requiere 1 unidad de pollo + 1 kg carbón proporcional.',
+    preparationNotes: 'Pollo frito entero tradicional. Consume 1.00 ave + papas y empaque.',
     ingredients: [
       {
         inventoryItemId: 'inv-1',
         inventoryItemName: 'Pollo Entero Fresco (Marinado)',
         quantityNeeded: 1,
-        unit: 'unidades',
+        unit: 'pollos',
         unitCost: 24000
       },
       {
-        inventoryItemId: 'inv-2',
-        inventoryItemName: 'Carbón Vegetal de Encina',
-        quantityNeeded: 1.2,
+        inventoryItemId: 'inv-8',
+        inventoryItemName: 'Papas Amarillas Selección Especial',
+        quantityNeeded: 0.5,
         unit: 'kg',
-        unitCost: 3500
-      },
-      {
-        inventoryItemId: 'inv-4',
-        inventoryItemName: 'Salsa de Ají Amarillo Casero',
-        quantityNeeded: 0.1,
-        unit: 'litros',
-        unitCost: 9000
+        unitCost: 3200
       },
       {
         inventoryItemId: 'inv-6',
@@ -1121,7 +1114,129 @@ export const INITIAL_RECIPES: Recipe[] = [
     ]
   },
   {
-    id: 'rec-102',
+    id: 'rec-101-half',
+    menuItemId: 'medio-pollo-frito',
+    menuItemName: '1/2 Pollo Frito',
+    yieldServings: 1,
+    preparationNotes: 'Medio pollo frito tradicional. Consume exactamente 0.50 ave.',
+    ingredients: [
+      {
+        inventoryItemId: 'inv-1',
+        inventoryItemName: 'Pollo Entero Fresco (Marinado)',
+        quantityNeeded: 0.5,
+        unit: 'pollos',
+        unitCost: 24000
+      },
+      {
+        inventoryItemId: 'inv-8',
+        inventoryItemName: 'Papas Amarillas Selección Especial',
+        quantityNeeded: 0.25,
+        unit: 'kg',
+        unitCost: 3200
+      }
+    ]
+  },
+  {
+    id: 'rec-101-quarter',
+    menuItemId: 'cuarto-pollo-frito',
+    menuItemName: '1/4 Pollo Frito',
+    yieldServings: 1,
+    preparationNotes: 'Un cuarto de pollo frito. Consume exactamente 0.25 ave.',
+    ingredients: [
+      {
+        inventoryItemId: 'inv-1',
+        inventoryItemName: 'Pollo Entero Fresco (Marinado)',
+        quantityNeeded: 0.25,
+        unit: 'pollos',
+        unitCost: 24000
+      },
+      {
+        inventoryItemId: 'inv-8',
+        inventoryItemName: 'Papas Amarillas Selección Especial',
+        quantityNeeded: 0.15,
+        unit: 'kg',
+        unitCost: 3200
+      }
+    ]
+  },
+  {
+    id: 'rec-102-broster',
+    menuItemId: 'pollo-broster',
+    menuItemName: 'Pollo Broster (Entero)',
+    yieldServings: 1,
+    preparationNotes: 'Pollo broster entero crujiente. Consume 1.00 ave + yuca.',
+    ingredients: [
+      {
+        inventoryItemId: 'inv-1',
+        inventoryItemName: 'Pollo Entero Fresco (Marinado)',
+        quantityNeeded: 1,
+        unit: 'pollos',
+        unitCost: 24000
+      },
+      {
+        inventoryItemId: 'inv-3',
+        inventoryItemName: 'Yuca Amarilla Criolla',
+        quantityNeeded: 0.5,
+        unit: 'kg',
+        unitCost: 3800
+      },
+      {
+        inventoryItemId: 'inv-6',
+        inventoryItemName: 'Cajas Térmicas Pollo Entero',
+        quantityNeeded: 1,
+        unit: 'unidades',
+        unitCost: 800
+      }
+    ]
+  },
+  {
+    id: 'rec-102-broster-half',
+    menuItemId: 'medio-pollo-broster',
+    menuItemName: '1/2 Pollo Broster',
+    yieldServings: 1,
+    preparationNotes: 'Medio pollo broster crujiente. Consume exactamente 0.50 ave.',
+    ingredients: [
+      {
+        inventoryItemId: 'inv-1',
+        inventoryItemName: 'Pollo Entero Fresco (Marinado)',
+        quantityNeeded: 0.5,
+        unit: 'pollos',
+        unitCost: 24000
+      },
+      {
+        inventoryItemId: 'inv-3',
+        inventoryItemName: 'Yuca Amarilla Criolla',
+        quantityNeeded: 0.25,
+        unit: 'kg',
+        unitCost: 3800
+      }
+    ]
+  },
+  {
+    id: 'rec-102-broster-quarter',
+    menuItemId: 'cuarto-pollo-broster',
+    menuItemName: '1/4 Pollo Broster',
+    yieldServings: 1,
+    preparationNotes: 'Un cuarto de pollo broster crujiente. Consume exactamente 0.25 ave.',
+    ingredients: [
+      {
+        inventoryItemId: 'inv-1',
+        inventoryItemName: 'Pollo Entero Fresco (Marinado)',
+        quantityNeeded: 0.25,
+        unit: 'pollos',
+        unitCost: 24000
+      },
+      {
+        inventoryItemId: 'inv-3',
+        inventoryItemName: 'Yuca Amarilla Criolla',
+        quantityNeeded: 0.15,
+        unit: 'kg',
+        unitCost: 3800
+      }
+    ]
+  },
+  {
+    id: 'rec-103-combo',
     menuItemId: 'combo-familiar',
     menuItemName: 'Combo Familiar Asadero',
     yieldServings: 1,
@@ -1131,7 +1246,7 @@ export const INITIAL_RECIPES: Recipe[] = [
         inventoryItemId: 'inv-1',
         inventoryItemName: 'Pollo Entero Fresco (Marinado)',
         quantityNeeded: 1,
-        unit: 'unidades',
+        unit: 'pollos',
         unitCost: 24000
       },
       {
@@ -1158,7 +1273,7 @@ export const INITIAL_RECIPES: Recipe[] = [
     ]
   },
   {
-    id: 'rec-103',
+    id: 'rec-104-yuca',
     menuItemId: 'yuca-frita',
     menuItemName: 'Yuca Frita Crocante (L)',
     yieldServings: 1,

@@ -501,7 +501,7 @@ export default function App() {
       )
     );
 
-    // Automatically deduct inventory stock for sold items using recipe BOM or fallback
+    // Automatically deduct inventory stock for sold items using recipe BOM or fraction-aware fallback
     setInventoryItems((prevInventory) =>
       prevInventory.map((inv) => {
         let qtyToDeduct = 0;
@@ -514,20 +514,29 @@ export default function App() {
               qtyToDeduct += ing.quantityNeeded * ci.quantity;
             }
           } else {
-            // Fallback keyword match
+            // Fallback keyword match with fraction support (1/4=0.25, 1/2=0.50, entero=1.0)
+            const itemNameLower = ci.name.toLowerCase();
+            const invNameLower = inv.name.toLowerCase();
+
             if (
-              ci.name.toLowerCase().includes('pollo') &&
-              inv.name.toLowerCase().includes('pollo')
+              itemNameLower.includes('pollo') &&
+              invNameLower.includes('pollo')
             ) {
-              qtyToDeduct += ci.quantity;
+              if (itemNameLower.includes('1/4') || itemNameLower.includes('cuarto')) {
+                qtyToDeduct += ci.quantity * 0.25;
+              } else if (itemNameLower.includes('1/2') || itemNameLower.includes('medio')) {
+                qtyToDeduct += ci.quantity * 0.5;
+              } else {
+                qtyToDeduct += ci.quantity * 1.0;
+              }
             } else if (
-              ci.name.toLowerCase().includes('yuca') &&
-              inv.name.toLowerCase().includes('yuca')
+              itemNameLower.includes('yuca') &&
+              invNameLower.includes('yuca')
             ) {
               qtyToDeduct += ci.quantity * 0.5;
             } else if (
-              ci.name.toLowerCase().includes('inca') &&
-              inv.name.toLowerCase().includes('inca')
+              itemNameLower.includes('inca') &&
+              invNameLower.includes('inca')
             ) {
               qtyToDeduct += ci.quantity;
             }
@@ -537,7 +546,7 @@ export default function App() {
         if (qtyToDeduct > 0) {
           return {
             ...inv,
-            stockQuantity: Math.max(0, inv.stockQuantity - Math.round(qtyToDeduct))
+            stockQuantity: Math.max(0, parseFloat((inv.stockQuantity - qtyToDeduct).toFixed(2)))
           };
         }
         return inv;

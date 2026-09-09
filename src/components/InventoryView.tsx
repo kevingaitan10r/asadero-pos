@@ -307,7 +307,7 @@ export const InventoryView: React.FC<InventoryViewProps> = ({
                                 : 'text-emerald-600 dark:text-emerald-400'
                             }`}
                           >
-                            {item.stockQuantity} {item.unit}
+                            {Number(item.stockQuantity.toFixed(2))} {item.unit}
                           </span>
                           {isLow && (
                             <span className="px-1.5 py-0.5 bg-red-600 text-white text-[10px] font-black rounded">
@@ -406,9 +406,10 @@ export const InventoryView: React.FC<InventoryViewProps> = ({
                 </label>
                 <input
                   type="number"
-                  min="1"
+                  min="0.25"
+                  step="0.25"
                   value={restockAmount}
-                  onChange={(e) => setRestockAmount(parseInt(e.target.value) || 1)}
+                  onChange={(e) => setRestockAmount(parseFloat(e.target.value) || 0)}
                   className="w-full bg-surface-elevated border border-border-subtle text-slate-900 dark:text-white p-3 rounded-xl font-bold text-base outline-none focus:border-amber-500"
                 />
               </div>
@@ -416,7 +417,7 @@ export const InventoryView: React.FC<InventoryViewProps> = ({
               <div className="p-3 bg-emerald-500/10 border border-emerald-500/30 rounded-xl text-xs text-emerald-700 dark:text-emerald-300 flex justify-between items-center">
                 <span>Nuevo Stock estimado:</span>
                 <span className="font-black text-sm font-mono">
-                  {restockingItem.stockQuantity + restockAmount} {restockingItem.unit}
+                  {Number((restockingItem.stockQuantity + restockAmount).toFixed(2))} {restockingItem.unit}
                 </span>
               </div>
 

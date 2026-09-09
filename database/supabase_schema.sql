@@ -1,6 +1,6 @@
 -- ==============================================================================
--- ASADERO POS & ERP - ESQUEMA COMPLETO DE BASE DE DATOS PARA SUPABASE
--- MAXI Pollos 22 (CARTA COMPLETA DE 3 PÁGINAS + CONTROL DE INVENTARIO FRACCIONADO)
+-- ASADERO POS & ERP - ESQUEMA COMPLETO Y SEGURO PARA SUPABASE
+-- MAXI Pollos 22 (Ejecución 100% Reentrable / Idempotente)
 -- ==============================================================================
 
 -- 1. Habilitar extensiones necesarias
@@ -12,7 +12,7 @@ CREATE TABLE IF NOT EXISTS public.profiles (
     auth_user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
     username TEXT UNIQUE NOT NULL,
     email TEXT,
-    password_hash TEXT, -- Para autenticación rápida por usuario/contraseña
+    password_hash TEXT,
     full_name TEXT NOT NULL,
     role TEXT NOT NULL CHECK (role IN ('admin', 'mesero', 'cajero', 'parrillero')),
     phone TEXT,
@@ -43,14 +43,14 @@ CREATE TABLE IF NOT EXISTS public.menu_items (
     created_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
--- 5. TABLA DE INVENTARIO (CON PRECISIÓN DECIMAL PARA POLLOS: 0.25, 0.50, 1.00)
+-- 5. TABLA DE INVENTARIO (CON PRECISIÓN DECIMAL: 0.25, 0.50, 1.00 POLLOS)
 CREATE TABLE IF NOT EXISTS public.inventory_items (
     id TEXT PRIMARY KEY,
     sku TEXT,
     name TEXT NOT NULL,
     category TEXT NOT NULL,
     stock_quantity NUMERIC(10, 2) NOT NULL DEFAULT 0,
-    unit TEXT NOT NULL, -- ej. 'pollos', 'kg', 'unidades'
+    unit TEXT NOT NULL,
     min_stock_threshold NUMERIC(10, 2) NOT NULL DEFAULT 10,
     cost_per_unit NUMERIC(12, 2) NOT NULL DEFAULT 0,
     supplier TEXT,
@@ -58,7 +58,7 @@ CREATE TABLE IF NOT EXISTS public.inventory_items (
     created_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
--- 6. TABLA DE RECETAS (ESCANDALLOS - COSTEO)
+-- 6. TABLA DE RECETAS (ESCANDALLOS)
 CREATE TABLE IF NOT EXISTS public.recipes (
     id TEXT PRIMARY KEY,
     menu_item_id TEXT REFERENCES public.menu_items(id) ON DELETE CASCADE,
@@ -68,18 +68,18 @@ CREATE TABLE IF NOT EXISTS public.recipes (
     created_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
--- 7. TABLA DE INGREDIENTES DE RECETAS (CONSUMO FRACCIONADO)
+-- 7. TABLA DE INGREDIENTES DE RECETAS (DEDUCCIÓN DECIMAL)
 CREATE TABLE IF NOT EXISTS public.recipe_ingredients (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     recipe_id TEXT REFERENCES public.recipes(id) ON DELETE CASCADE,
     inventory_item_id TEXT REFERENCES public.inventory_items(id) ON DELETE RESTRICT,
     inventory_item_name TEXT NOT NULL,
-    quantity_needed NUMERIC(10, 3) NOT NULL, -- ej. 0.250 para 1/4 pollo, 0.500 para 1/2 pollo
+    quantity_needed NUMERIC(10, 3) NOT NULL,
     unit TEXT NOT NULL,
     unit_cost NUMERIC(12, 2) NOT NULL DEFAULT 0
 );
 
--- 8. TABLA DE ÓRDENES / COMANDAS (TIEMPO REAL)
+-- 8. TABLA DE ÓRDENES / COMANDAS
 CREATE TABLE IF NOT EXISTS public.orders (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     order_number TEXT NOT NULL,
@@ -118,13 +118,34 @@ CREATE TABLE IF NOT EXISTS public.order_items (
 );
 
 -- ==============================================================================
--- HABILITAR TIEMPO REAL (REALTIME) PARA ACTUALIZACIÓN INSTANTÁNEA EN CELULARES
+-- REALTIME (TIEMPO REAL) SEGURO
 -- ==============================================================================
-ALTER PUBLICATION supabase_realtime ADD TABLE public.orders;
-ALTER PUBLICATION supabase_realtime ADD TABLE public.inventory_items;
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_publication_tables 
+    WHERE pubname = 'supabase_realtime' AND tablename = 'orders'
+  ) THEN
+    ALTER PUBLICATION supabase_realtime ADD TABLE public.orders;
+  END IF;
+
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_publication_tables 
+    WHERE pubname = 'supabase_realtime' AND tablename = 'inventory_items'
+  ) THEN
+    ALTER PUBLICATION supabase_realtime ADD TABLE public.inventory_items;
+  END IF;
+
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_publication_tables 
+    WHERE pubname = 'supabase_realtime' AND tablename = 'menu_items'
+  ) THEN
+    ALTER PUBLICATION supabase_realtime ADD TABLE public.menu_items;
+  END IF;
+END $$;
 
 -- ==============================================================================
--- POLÍTICAS DE SEGURIDAD (ROW LEVEL SECURITY - RLS)
+-- POLÍTICAS DE SEGURIDAD (RLS) IDEMPOTENTES (DROP IF EXISTS + CREATE)
 -- ==============================================================================
 ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.categories ENABLE ROW LEVEL SECURITY;
@@ -135,26 +156,44 @@ ALTER TABLE public.recipe_ingredients ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.orders ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.order_items ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Permitir lectura general de perfiles" ON public.profiles;
 CREATE POLICY "Permitir lectura general de perfiles" ON public.profiles FOR SELECT USING (true);
+
+DROP POLICY IF EXISTS "Permitir inserción de perfiles" ON public.profiles;
 CREATE POLICY "Permitir inserción de perfiles" ON public.profiles FOR INSERT WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Permitir actualización de perfiles" ON public.profiles;
 CREATE POLICY "Permitir actualización de perfiles" ON public.profiles FOR UPDATE USING (true);
 
+DROP POLICY IF EXISTS "Permitir lectura del menú" ON public.menu_items;
 CREATE POLICY "Permitir lectura del menú" ON public.menu_items FOR SELECT USING (true);
+
+DROP POLICY IF EXISTS "Permitir modificación del menú" ON public.menu_items;
 CREATE POLICY "Permitir modificación del menú" ON public.menu_items FOR ALL USING (true);
+
+DROP POLICY IF EXISTS "Permitir lectura de categorías" ON public.categories;
 CREATE POLICY "Permitir lectura de categorías" ON public.categories FOR SELECT USING (true);
 
+DROP POLICY IF EXISTS "Permitir lectura y modificación de inventario" ON public.inventory_items;
 CREATE POLICY "Permitir lectura y modificación de inventario" ON public.inventory_items FOR ALL USING (true);
+
+DROP POLICY IF EXISTS "Permitir lectura y modificación de recetas" ON public.recipes;
 CREATE POLICY "Permitir lectura y modificación de recetas" ON public.recipes FOR ALL USING (true);
+
+DROP POLICY IF EXISTS "Permitir lectura y modificación de ingredientes" ON public.recipe_ingredients;
 CREATE POLICY "Permitir lectura y modificación de ingredientes" ON public.recipe_ingredients FOR ALL USING (true);
 
+DROP POLICY IF EXISTS "Permitir lectura y creación de órdenes" ON public.orders;
 CREATE POLICY "Permitir lectura y creación de órdenes" ON public.orders FOR ALL USING (true);
+
+DROP POLICY IF EXISTS "Permitir lectura y creación de items de orden" ON public.order_items;
 CREATE POLICY "Permitir lectura y creación de items de orden" ON public.order_items FOR ALL USING (true);
 
 -- ==============================================================================
--- DATOS INICIALES (SEED DATA COMPLETO DE LAS 3 PÁGINAS DE LA CARTA FÍSICA)
+-- INSERCIÓN DE DATOS INICIALES (SEED DATA LIMPIO)
 -- ==============================================================================
 
--- 1. CATEGORÍAS DE LA CARTA
+-- 1. Categorías
 INSERT INTO public.categories (id, name, icon, sort_order) VALUES
 ('pollos', 'Pollos Asados & Broster', '🍗', 1),
 ('sopas', 'Sopas Tradicionales', '🍲', 2),
@@ -164,7 +203,7 @@ INSERT INTO public.categories (id, name, icon, sort_order) VALUES
 ('bebidas', 'Bebidas & Refrescos', '🥤', 6)
 ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name, icon = EXCLUDED.icon, sort_order = EXCLUDED.sort_order;
 
--- 2. INVENTARIO BASE (CON POLLOS EN UNIDAD DECIMAL)
+-- 2. Inventario inicial (Pollo en unidad 'pollos' para cálculo decimal 0.25, 0.50, 1.00)
 INSERT INTO public.inventory_items (id, sku, name, category, stock_quantity, unit, min_stock_threshold, cost_per_unit, supplier) VALUES
 ('inv-1', 'INS-101', 'Pollo Entero Fresco (Marinado)', 'carnes', 50.00, 'pollos', 15.00, 24000, 'Avícola San Pedro S.A.S.'),
 ('inv-2', 'INS-102', 'Carbón Vegetal de Encina', 'insumos', 80.00, 'kg', 30.00, 3500, 'Carbones del Sur S.A.S.'),
@@ -173,27 +212,20 @@ INSERT INTO public.inventory_items (id, sku, name, category, stock_quantity, uni
 ('inv-6', 'INS-106', 'Cajas Térmicas Pollo Entero', 'empaques', 150.00, 'unidades', 40.00, 800, 'Empaques Biodegradables S.A.')
 ON CONFLICT (id) DO UPDATE SET stock_quantity = EXCLUDED.stock_quantity, unit = EXCLUDED.unit;
 
--- 3. CARTA COMPLETA (42 PLATOS OFICIALES)
+-- 3. Platos de la Carta (42 platos completos)
 INSERT INTO public.menu_items (id, plu, name, description, price, category_id, is_popular, prep_time, image_url) VALUES
--- PÁGINA 1: POLLOS
 ('pollo-frito', '101', 'Pollo Frito (Entero)', 'Pollo frito entero servido con papa salada y arepa.', 35000, 'pollos', true, '15m', 'https://images.unsplash.com/photo-1626082927389-6cd097cdc6ec?w=600&auto=format&fit=crop&q=80'),
 ('medio-pollo-frito', '103', '1/2 Pollo Frito', 'Medio pollo frito servido con papa salada y arepa.', 18500, 'pollos', true, '10m', 'https://images.unsplash.com/photo-1626082927389-6cd097cdc6ec?w=600&auto=format&fit=crop&q=80'),
 ('cuarto-pollo-frito', '105', '1/4 Pollo Frito', 'Un cuarto de pollo frito servido con papa salada y arepa.', 10000, 'pollos', true, '5m', 'https://images.unsplash.com/photo-1626082927389-6cd097cdc6ec?w=600&auto=format&fit=crop&q=80'),
 ('pollo-broster', '102', 'Pollo Broster (Entero)', 'Pollo broaster crujiente entero servido con yuca y arepa frita.', 37000, 'pollos', true, '15m', 'https://images.unsplash.com/photo-1569058242253-92a9c755a0ec?w=600&auto=format&fit=crop&q=80'),
 ('medio-pollo-broster', '104', '1/2 Pollo Broster', 'Medio pollo broaster crujiente servido con yuca y arepa frita.', 19500, 'pollos', true, '10m', 'https://images.unsplash.com/photo-1569058242253-92a9c755a0ec?w=600&auto=format&fit=crop&q=80'),
 ('cuarto-pollo-broster', '106', '1/4 Pollo Broster', 'Un cuarto de pollo broaster crujiente servido con yuca y arepa frita.', 10500, 'pollos', true, '5m', 'https://images.unsplash.com/photo-1569058242253-92a9c755a0ec?w=600&auto=format&fit=crop&q=80'),
-
--- PÁGINA 1: SOPAS
 ('sopa-ajiaco', '401', 'Ajiaco Santafereño', 'Presa de pollo y porción de arroz.', 11000, 'sopas', true, '8m', 'https://images.unsplash.com/photo-1547592166-23ac45744acd?w=600&auto=format&fit=crop&q=80'),
 ('sopa-mondongo', '402', 'Sopa de Mondongo', 'Tradicional sopa de mondongo servida con porción de arroz.', 11000, 'sopas', false, '8m', 'https://images.unsplash.com/photo-1574484284002-952d92456975?w=600&auto=format&fit=crop&q=80'),
 ('sopa-menudencias', '403', 'Sopa de Menudencias', 'Sopa casera con menudencias y porción de arroz.', 7000, 'sopas', false, '5m', 'https://images.unsplash.com/photo-1603105037880-880cd4edfb0d?w=600&auto=format&fit=crop&q=80'),
-
--- PÁGINA 1: COMBOS FAMILIARES
 ('combo-frito', '201', 'Combo Frito', '1 pollo, plátano, papa salada, arepa y gaseosa 1.5L.', 45000, 'combos', true, '15m', 'https://images.unsplash.com/photo-1527477321076-0e9e1c1ca756?w=600&auto=format&fit=crop&q=80'),
 ('combo-broster', '202', 'Combo Broster', '1 Pollo broaster, arepa y yuca frita, plátano y gaseosa 1.5L.', 47000, 'combos', true, '15m', 'https://images.unsplash.com/photo-1626082927389-6cd097cdc6ec?w=600&auto=format&fit=crop&q=80'),
 ('combo-mixto', '203', 'Combo Mixto', 'Medio pollo frito, medio broaster, yuca, papa, arepas, plátano y gaseosa 1.5L.', 47000, 'combos', true, '18m', 'https://images.unsplash.com/photo-1587593810167-a84920ea0781?w=600&auto=format&fit=crop&q=80'),
-
--- PÁGINA 2: PLATOS A LA CARTA
 ('churrasco', '301', 'Churrasco', 'Papa francesa, ensalada y patacón.', 31000, 'alacarta', true, '18m', 'https://images.unsplash.com/photo-1544025162-d76694265947?w=600&auto=format&fit=crop&q=80'),
 ('carne-asada', '302', 'Carne Asada', 'Arroz, papa francesa, ensalada y patacón.', 30000, 'alacarta', true, '15m', 'https://images.unsplash.com/photo-1558030006-450675393462?w=600&auto=format&fit=crop&q=80'),
 ('sobrebarriga', '303', 'Sobrebarriga', 'Arroz, papa francesa, ensalada y patacón (en salsa o al horno).', 30000, 'alacarta', false, '12m', 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=600&auto=format&fit=crop&q=80'),
@@ -206,16 +238,12 @@ INSERT INTO public.menu_items (id, plu, name, description, price, category_id, i
 ('trucha', '310', 'Trucha', 'Papa francesa, ensalada y patacón.', 30000, 'alacarta', false, '15m', 'https://images.unsplash.com/photo-1534939561126-855b8675edd7?w=600&auto=format&fit=crop&q=80'),
 ('bandeja-pollo', '311', 'Bandeja con Pollo', 'Papa francesa, arroz, ensalada y patacón.', 18000, 'alacarta', true, '10m', 'https://images.unsplash.com/photo-1598515214211-89d3c73ae83b?w=600&auto=format&fit=crop&q=80'),
 ('arroz-con-pollo', '312', 'Arroz con Pollo', 'Papa francesa, ensalada y patacón.', 20000, 'alacarta', true, '10m', 'https://images.unsplash.com/photo-1512058564366-18510be2db19?w=600&auto=format&fit=crop&q=80'),
-
--- PÁGINA 3: ADICIONES & ACOMPAÑAMIENTOS
 ('papa-francesa', '501', 'Papa Francesa', 'Porción de papa francesa crocante.', 5000, 'adiciones', true, '6m', 'https://images.unsplash.com/photo-1573080496219-bb080dd4f877?w=600&auto=format&fit=crop&q=80'),
 ('papa-salada', '502', 'Papa Salada', 'Porción de papa salada tradicional asadero.', 5000, 'adiciones', false, '3m', 'https://images.unsplash.com/photo-1518977676601-b53f82aba655?w=600&auto=format&fit=crop&q=80'),
 ('yuca-frita', '503', 'Yuca Frita', 'Porción de yuca frita crocante.', 5000, 'adiciones', true, '6m', 'https://images.unsplash.com/photo-1541592106381-b31e9677c0e5?w=600&auto=format&fit=crop&q=80'),
 ('ensalada', '504', 'Ensalada del Día', 'Porción de ensalada del día fresca.', 2500, 'adiciones', false, '2m', 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=600&auto=format&fit=crop&q=80'),
 ('arroz-porcion', '505', 'Porción de Arroz', 'Porción de arroz blanco caliente.', 2500, 'adiciones', false, '2m', 'https://images.unsplash.com/photo-1516684732162-798a0062be99?w=600&auto=format&fit=crop&q=80'),
 ('platano-asado', '506', 'Plátano Asado', 'Plátano maduro asado al carbón.', 4000, 'adiciones', true, '5m', 'https://images.unsplash.com/photo-1528751014936-863e6e7a319c?w=600&auto=format&fit=crop&q=80'),
-
--- PÁGINA 3: BEBIDAS & REFRESCOS
 ('gaseosa-350', '601', 'Gaseosa 350 mL', 'Presentación personal 350mL bien fría.', 2500, 'bebidas', false, '1m', 'https://images.unsplash.com/photo-1622483767028-3f66f32aef97?w=600&auto=format&fit=crop&q=80'),
 ('gaseosa-400', '602', 'Gaseosa 400 mL', 'Presentación 400mL en botella.', 3500, 'bebidas', false, '1m', 'https://images.unsplash.com/photo-1554866585-cd94860890b7?w=600&auto=format&fit=crop&q=80'),
 ('gaseosa-15', '603', 'Gaseosa 1.5 L', 'Presentación familiar 1.5 Litros.', 7000, 'bebidas', true, '1m', 'https://images.unsplash.com/photo-1622483767028-3f66f32aef97?w=600&auto=format&fit=crop&q=80'),
@@ -236,7 +264,7 @@ ON CONFLICT (id) DO UPDATE SET
   image_url = EXCLUDED.image_url,
   is_popular = EXCLUDED.is_popular;
 
--- 4. RECETAS BOM (ESCANDALLOS DECIMALES PARA POLLOS)
+-- 4. Recetas BOM (Escandallos con deducción decimal)
 INSERT INTO public.recipes (id, menu_item_id, menu_item_name, yield_servings, preparation_notes) VALUES
 ('rec-101-quarter', 'cuarto-pollo-frito', '1/4 Pollo Frito', 1, 'Descuenta exactamente 0.25 pollos de nevera.'),
 ('rec-101-half', 'medio-pollo-frito', '1/2 Pollo Frito', 1, 'Descuenta exactamente 0.50 pollos de nevera.'),
@@ -252,9 +280,10 @@ INSERT INTO public.recipe_ingredients (recipe_id, inventory_item_id, inventory_i
 ('rec-101', 'inv-1', 'Pollo Entero Fresco (Marinado)', 1.000, 'pollos', 24000),
 ('rec-102-broster-quarter', 'inv-1', 'Pollo Entero Fresco (Marinado)', 0.250, 'pollos', 24000),
 ('rec-102-broster-half', 'inv-1', 'Pollo Entero Fresco (Marinado)', 0.500, 'pollos', 24000),
-('rec-102-broster', 'inv-1', 'Pollo Entero Fresco (Marinado)', 1.000, 'pollos', 24000);
+('rec-102-broster', 'inv-1', 'Pollo Entero Fresco (Marinado)', 1.000, 'pollos', 24000)
+ON CONFLICT (id) DO NOTHING;
 
--- 5. USUARIOS POR DEFECTO
+-- 5. Perfiles de usuario por defecto
 INSERT INTO public.profiles (username, email, password_hash, full_name, role, phone) VALUES
 ('admin', 'admin@maxipollos.com', 'admin123', 'Administrador General', 'admin', '3001234567'),
 ('carlos', 'carlos@maxipollos.com', 'mesero123', 'Carlos Ramírez', 'mesero', '3123456789'),

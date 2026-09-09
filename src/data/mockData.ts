@@ -27,17 +27,7 @@ export const INITIAL_MENU_ITEMS: MenuItem[] = [
     prepTime: '15m',
     image: 'https://images.unsplash.com/photo-1626082927389-6cd097cdc6ec?w=600&auto=format&fit=crop&q=80',
     isPopular: true,
-    availableModifiers: [
-      {
-        id: 'sauces',
-        name: 'Salsas de la Casa',
-        options: [
-          { id: 'aji-casero', name: 'Ají Casero Asadero', price: 0 },
-          { id: 'salsa-ajo', name: 'Salsa de Ajo Criolla', price: 0 },
-          { id: 'salsa-bbq', name: 'Salsa BBQ', price: 0 }
-        ]
-      }
-    ]
+    availableModifiers: []
   },
   {
     id: 'medio-pollo-frito',
@@ -50,16 +40,7 @@ export const INITIAL_MENU_ITEMS: MenuItem[] = [
     prepTime: '10m',
     image: 'https://images.unsplash.com/photo-1626082927389-6cd097cdc6ec?w=600&auto=format&fit=crop&q=80',
     isPopular: true,
-    availableModifiers: [
-      {
-        id: 'sauces',
-        name: 'Salsas de la Casa',
-        options: [
-          { id: 'aji-casero', name: 'Ají Casero Asadero', price: 0 },
-          { id: 'salsa-ajo', name: 'Salsa de Ajo Criolla', price: 0 }
-        ]
-      }
-    ]
+    availableModifiers: []
   },
   {
     id: 'cuarto-pollo-frito',
@@ -94,17 +75,7 @@ export const INITIAL_MENU_ITEMS: MenuItem[] = [
     prepTime: '15m',
     image: 'https://images.unsplash.com/photo-1569058242253-92a9c755a0ec?w=600&auto=format&fit=crop&q=80',
     isPopular: true,
-    availableModifiers: [
-      {
-        id: 'sauces',
-        name: 'Salsas de la Casa',
-        options: [
-          { id: 'aji-casero', name: 'Ají Casero Asadero', price: 0 },
-          { id: 'salsa-ajo', name: 'Salsa de Ajo Criolla', price: 0 },
-          { id: 'miel', name: 'Miel de Abejas', price: 0 }
-        ]
-      }
-    ]
+    availableModifiers: []
   },
   {
     id: 'medio-pollo-broster',
@@ -117,16 +88,7 @@ export const INITIAL_MENU_ITEMS: MenuItem[] = [
     prepTime: '10m',
     image: 'https://images.unsplash.com/photo-1569058242253-92a9c755a0ec?w=600&auto=format&fit=crop&q=80',
     isPopular: true,
-    availableModifiers: [
-      {
-        id: 'sauces',
-        name: 'Salsas de la Casa',
-        options: [
-          { id: 'aji-casero', name: 'Ají Casero Asadero', price: 0 },
-          { id: 'salsa-ajo', name: 'Salsa de Ajo Criolla', price: 0 }
-        ]
-      }
-    ]
+    availableModifiers: []
   },
   {
     id: 'cuarto-pollo-broster',

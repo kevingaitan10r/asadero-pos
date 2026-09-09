@@ -19,6 +19,7 @@ import {
   AuthUser
 } from './types';
 import { authService } from './services/authService';
+import { dataService } from './services/dataService';
 import { LoginModal } from './components/LoginModal';
 import {
   INITIAL_MENU_ITEMS,
@@ -135,8 +136,27 @@ export default function App() {
   const [isMobileNavOpen, setIsMobileNavOpen] = useState<boolean>(false);
   const [isMobileCartOpen, setIsMobileCartOpen] = useState<boolean>(false);
 
-  // Core Data POS
-  const menuItems = INITIAL_MENU_ITEMS;
+  // Core Data POS - Sincronizado en Vivo con Supabase
+  const [menuItems, setMenuItems] = useState<MenuItem[]>(INITIAL_MENU_ITEMS);
+
+  // Cargar menú real desde Supabase y escuchar cambios en vivo
+  React.useEffect(() => {
+    dataService.getMenuItems().then((items) => {
+      if (items && items.length > 0) {
+        setMenuItems(items);
+      }
+    });
+
+    const unsubscribe = dataService.subscribeToMenuChanges((updatedItems) => {
+      if (updatedItems && updatedItems.length > 0) {
+        setMenuItems(updatedItems);
+      }
+    });
+
+    return () => {
+      unsubscribe();
+    };
+  }, []);
   const [tables, setTables] = useState<Table[]>(INITIAL_TABLES);
   const [orders, setOrders] = useState<Order[]>(INITIAL_ORDERS);
   const [inventoryItems, setInventoryItems] = useState<InventoryItem[]>(INITIAL_INVENTORY_ITEMS);

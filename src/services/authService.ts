@@ -132,3 +132,4 @@ export const authService = {
     return DEFAULT_USERS.map(({ password: _, ...user }) => user);
   }
 };
+
